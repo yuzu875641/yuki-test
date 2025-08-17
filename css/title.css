@@ -1,0 +1,14 @@
+.title-container {
+  display: flex; /* フレックスボックスによるレイアウト変更 */
+            align-items: center; /* 縦方向のセンタリング */
+            margin-right: 10px; /* 検索バーとのスペース */
+}
+h2 {
+  font-size: 24px; /* タイトルのサイズ */
+  margin: 0; /* マージンを0に */
+}
+p {
+  font-size: 16px; /* サブタイトルのサイズ */
+  margin: 0; /* マージンを0に */
+  margin-left: 5px; /* サブタイトルとタイトルのスペース */
+}

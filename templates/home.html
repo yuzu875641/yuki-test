@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <title>連番を簡単に生成！！</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" href="haikei.css">
+    <link rel="stylesheet" href="/css/empty.css">
+    <link rel="stylesheet" href="/css/pure-min.css">
+    <link rel="stylesheet" href="/css/grids-responsive-min.css">
+    <link rel="stylesheet" href="/css/ionicons.min.css">
+    <link rel="stylesheet" href="/css/default.css">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"/>
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+</head>
+
+    <body class="no-theme">
+        <div class="pure-g h-box" id="search-widget">
+            <div class="pure-u-1" id="logo">
+                <h1 href="/" class="pure-menu-heading">Yuki Youtube</h1>
+                <p style="text-align: center;">necolian非公式改造版</p>
+                <p style="text-align: center;">v2.2.0</p>
+                <p style="text-align: center;">新機能追加中! <a href="https://github.com/necolian/yukitube-ex">このyukiのgithub</a></p>
+                
+                
+                <a href="/bbs">掲示板(規制回避サイトの教え合いなども行ってるので来てみてください)</a></br>
+                
+            <a href="https://discord.gg/5j7EVWXQGP">Yuki Youtube開発部discordサーバーはこちらから</a></br>
+            <
+            <a href="https://www.chatwork.com/g/Yuki_BBS_7th">Yuki Youtube公式chatwork</a></br>
+            <a href="https://rvlt.gg/RRTq8aKF">Yuki Youtube公式revolt</a></br>
+                
+            </div>
+            <div class="pure-u-1-4"></div>
+            <div class="pure-u-1 pure-u-md-12-24 searchbar">
+                <form id="searchForm" class="pure-form" action="/search" method="get">
+                    <fieldset>
+                        <input type="search" id="searchbox" autocomplete="on" autocorrect="on" autocapitalize="none" spellcheck="false" autofocus="" name="q" placeholder="検索" title="検索" value="">
+                    </fieldset>
+                </form>
+            </div>
+            <div class="pure-u-1-4"></div>
+            
+        </div>
+        <script>
+            $('#searchbox').autocomplete({
+                source: function (request, response) {
+                    {
+                        var url = "/suggest?keyword="+ request.term
+                        var xhr = new XMLHttpRequest();
+                        xhr.open("GET", url);
+                        xhr.onload = function() {
+                            response(JSON.parse(xhr.responseText));
+                        }
+                        xhr.send();
+                    }
+                },
+    　　　　　    select: function(event, ui) {
+                        // 候補が選択されたときの処理
+                        // テキストボックスに選択したアイテムをセット
+                        $("#searchbox").val(ui.item.value);
+                        // フォームを送信
+                        $("#searchForm").submit(); // フォームを送信
+                        return false; // jQuery UIのデフォルトの動作をキャンセル
+                },
+    　　　　　    delay: 300
+            });
+        </script>
+    </body>
+
+</html>
