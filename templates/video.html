@@ -32,7 +32,7 @@
         .comment-icon {
             width: 40px;
             height: 40px;
-            border-radius: 9999px;
+            border-radius: 9999px; /* Tailwindの`rounded-full`に相当 */
             object-fit: cover;
         }
     </style>
@@ -145,16 +145,15 @@
         xhr.open("GET", "/comments?v=" + getUrlQueries().v);
         xhr.onload = function () {
             if (xhr.status != 500) {
-                // コメントのHTMLを動的に挿入する際に、アイコンのスタイルを適用する
                 const commentsHtml = xhr.responseText;
                 const commentsContainer = document.getElementById('comments');
                 
-                // ここで commentsHtml 内の img タグに class="comment-icon" を追加する処理が必要になります
-                // 例えば、正規表現やDOM操作で img タグを見つけて、クラスを追加する
+                // コメントHTMLをDOM要素に変換
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(commentsHtml, 'text/html');
-                const commentIcons = doc.querySelectorAll('img');
                 
+                // コメントアイコンにCSSクラスを適用
+                const commentIcons = doc.querySelectorAll('img');
                 commentIcons.forEach(icon => {
                     icon.classList.add('comment-icon');
                 });
