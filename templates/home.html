@@ -1,63 +1,65 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
     <title>連番を簡単に生成！！</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <link rel="stylesheet" href="haikei.css">
-    <link rel="stylesheet" href="/css/empty.css">
-    <link rel="stylesheet" href="/css/pure-min.css">
-    <link rel="stylesheet" href="/css/grids-responsive-min.css">
-    <link rel="stylesheet" href="/css/ionicons.min.css">
-    <link rel="stylesheet" href="/css/default.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500&display=swap" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <style>
+        body {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+        }
+        .ui-menu .ui-menu-item {
+            font-size: 16px; /* 自動補完候補を大きく */
+            padding: 10px 16px;
+            background-color: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+        }
+    </style>
 </head>
-
-    <body class="no-theme">
-                <div class="pure-g h-box" id="search-widget">
-            <div class="pure-u-1" id="logo">
-                <h1 href="/" class="pure-menu-heading">Yuki Youtube</h1>
-        <a href="/bbs">掲示板</a></br>
-                    <div class="pure-u-1-4"></div>
-           <div class="pure-u-1-4"></div>
-            <div class="pure-u-1 pure-u-md-12-24 searchbar">
-                <form id="searchForm" class="pure-form" action="/search" method="get">
-                    <fieldset>
-                        <input type="search" id="searchbox" autocomplete="on" autocorrect="on" autocapitalize="none" spellcheck="false" autofocus="" name="q" placeholder="検索" title="検索" value="">
-                    </fieldset>
-                </form>
-            </div>
-            <div class="pure-u-1-4"></div>
-        <script>
-            $('#searchbox').autocomplete({
-                source: function (request, response) {
-                    {
-                        var url = "/suggest?keyword="+ request.term
-                        var xhr = new XMLHttpRequest();
-                        xhr.open("GET", url);
-                        xhr.onload = function() {
-                            response(JSON.parse(xhr.responseText));
-                        }
-                        xhr.send();
-                    }
-                },
-    　　　　　    select: function(event, ui) {
-                        // 候補が選択されたときの処理
-                        // テキストボックスに選択したアイテムをセット
-                        $("#searchbox").val(ui.item.value);
-                        // フォームを送信
-                        $("#searchForm").submit(); // フォームを送信
-                        return false; // jQuery UIのデフォルトの動作をキャンセル
-                },
-    　　　　　    delay: 300
-            });
-        </script>
-    </body>
-
+<body class="bg-blue-50 text-gray-800 flex justify-center items-center min-h-screen p-4 sm:p-8">
+    <div class="w-full max-w-2xl mx-auto p-6 sm:p-12 bg-white rounded-3xl shadow-2xl space-y-8 text-center">
+        <div class="mb-4">
+            <h1 class="text-5xl sm:text-6xl font-bold text-gray-700">Yuki Youtube</h1>
+            <a href="/bbs" class="mt-2 text-md sm:text-lg text-blue-400 hover:text-blue-600 transition-colors duration-200">掲示板</a>
+        </div>
+        
+        <div class="searchbar">
+            <form id="searchForm" class="w-full" action="/search" method="get">
+                <div class="relative">
+                    <input type="search" id="searchbox" class="w-full py-4 px-8 text-lg rounded-full bg-gray-100 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-300 focus:border-transparent transition-all duration-300" autocomplete="on" autocorrect="on" autocapitalize="none" spellcheck="false" autofocus="" name="q" placeholder="検索" title="検索" value="">
+                    <button type="submit" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        $('#searchbox').autocomplete({
+            source: function (request, response) {
+                var url = "/suggest?keyword=" + request.term;
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", url);
+                xhr.onload = function() {
+                    response(JSON.parse(xhr.responseText));
+                };
+                xhr.send();
+            },
+            select: function(event, ui) {
+                $("#searchbox").val(ui.item.value);
+                $("#searchForm").submit();
+                return false;
+            },
+            delay: 300
+        });
+    </script>
+</body>
 </html>
-
-
-
-
