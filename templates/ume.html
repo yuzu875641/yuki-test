@@ -106,17 +106,10 @@
         <div class="p-4 border-b border-gray-700 flex justify-end">
             <button id="close-sidebar" class="text-gray-400 hover:text-blue-400 text-2xl">&times;</button>
         </div>
-        <div class="sidebar-content flex flex-col p-4 space-y-4">
-            <a href="/bbs" class="hover:text-blue-400">掲示板</a>
-            <a href="/proxypage" class="hover:text-blue-400">Proxy</a>
-            <a href="/others" class="hover:text-blue-400">その他</a>
-            <a href="/sitsumon" class="hover:text-blue-400">回答よろ</a>
-            <hr class="border-gray-700">
             <a href="{{ videourls[0] }}" download="{{ video_title }}" class="hover:text-blue-400">ダウンロード</a>
             <a href="javascript:location.replace('/watch?v={{ videoid }}')" class="hover:text-blue-400">デフォルトで視聴する</a>
             <a href="javascript:location.replace('/ume?v={{ videoid }}')" class="hover:text-blue-400">埋め込み(nocookie)で視聴する</a>
             <a href="javascript:location.replace('/w?v={{ videoid }}')" class="hover:text-blue-400">高画質で視聴する</a>
-            <a href="javascript:location.replace('/history')" class="hover:text-blue-400">履歴を閲覧</a>
             <label class="flex items-center space-x-2 cursor-pointer text-gray-400">
                 <input id="autonextpage" type="checkbox" onchange="changeAutoNextPage(this)" class="form-checkbox h-4 w-4 text-blue-600 rounded">
                 <span>自動で次の動画に遷移</span>
