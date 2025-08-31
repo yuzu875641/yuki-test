@@ -3,80 +3,95 @@
 <head>
     <title>連番を簡単に生成！！</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <link rel="stylesheet" href="/css/pure-min.css">
-    <link rel="stylesheet" href="/css/grids-responsive-min.css">
-    <link rel="stylesheet" href="/css/ionicons.min.css">
-    <link rel="stylesheet" href="/css/default.css">
-    <link rel="stylesheet" href="/css/title.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500&display=swap" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <style>
+        body {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+        }
+        .ui-autocomplete {
+            background-color: #2D3748;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            color: #E2E8F0;
+        }
+        .ui-menu .ui-menu-item {
+            font-size: 1rem;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .ui-menu .ui-menu-item:hover, .ui-menu .ui-menu-item-active {
+            background-color: #4A5568;
+        }
+    </style>
 </head>
-<body class="no-theme">
-    <span style="display:none" id="dark_mode_pref"></span>
-    <div class="pure-g">
-        <div class="pure-u-1 pure-u-md-2-24"></div>
-        <div class="pure-u-1 pure-u-md-20-24" id="contents">
-            <div class="pure-g navbar h-box" style="align-items: center;">
-                <div class="pure-u-1 pure-u-md-12-24 title-container">
-                    <h2 style="text-align:center; color: #565d64;"><a href="/" style="text-decoration:none;">Yuki Youtube</a></h2>
-                    <p style="text-align:center; color: #565d64;">necolian非公式改造版</p>
-                </div>
-                <div class="pure-u-1 pure-u-md-12-24 searchbar">
-                    <form id="searchForm" class="pure-form" action="/search" method="get">
-                        <fieldset>
-                            <input type="search" id="searchbox" autocomplete="on" autocorrect="on" autocapitalize="none" spellcheck="false" name="q" placeholder="検索" title="検索" value="{{ word }}">
-                        </fieldset>
-                    </form>
-                </div>
+<body class="bg-gray-900 text-gray-200 min-h-screen flex flex-col items-center p-4 md:p-8">
+
+    <div class="w-full max-w-7xl mx-auto space-y-8">
+        <header class="p-6 md:p-8 bg-gray-800 rounded-3xl shadow-2xl flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 md:space-x-8">
+            <div class="text-center md:text-left">
+                <h1 class="text-4xl sm:text-5xl font-bold text-blue-400"><a href="/" class="hover:text-blue-300 transition-colors duration-200">Yuki Youtube</a></h1>
+                <p class="text-sm text-gray-400">necolian非公式改造版</p>
             </div>
-            <br style="line-height: 50%">
-            <div class="pure-g">
-                {% for result in results %}
-                <div class="pure-u-1 pure-u-md-1-4">
-                    <div class="h-box">
-                        {% if result["type"] == "video" %}
-                        <a style="width:100%" href="/watch?v={{ result['id'] }}">
-                            <div class="thumbnail">
-                                <img loading="lazy" class="thumbnail" src="/thumbnail?v={{ result['id'] }}" onerror="document.cookie = 'proxy=True;max-age=2592000;';">
-                                <p class="length">{{result["length"]}}</p>
-                            </div>
-                            <p dir="auto">{{ result['title'] }}</p>
-                        </a>
-                        <div class="video-card-row flexible">
-                            <a href="/channel/{{result['authorId']}}">{{result["author"]}}</a>
-                        </div>
-                        <div class="video-card-row flexible">
-                            <div class="flex-left">
-                                <p class="video-data" dir="auto">{{result["published"]}}</p>
-                            </div>
-                        </div>
-                        {% elif result["type"] == "channel" %}
-                        <a href="/channel/{{result["id"]}}">
-                            <center>
-                                <img loading="lazy" tabindex="-1" style="width:56.25%" src="{{result['thumbnail']}}">
-                            </center>
-                            <p dir="auto">{{result["author"]}}</p>
-                        </a>
-                        {% elif result["type"] == "playlist" %}
-                        <a style="width:100%" href="/playlist?list={{result['id']}}">
-                            <div class="thumbnail">
-                                <img loading="lazy" tabindex="-1" class="thumbnail" src="/thumbnail?v={{ result['thumbnail'] }}">
-                                <p class="length">{{result["count"]}}個の動画</p>
-                            </div>
-                            <p dir="auto">{{result["title"]}}</p>
-                        </a>
-                        {% endif %}
+            <div class="w-full md:w-1/2">
+                <form id="searchForm" class="w-full" action="/search" method="get">
+                    <div class="relative">
+                        <input type="search" id="searchbox" class="w-full py-3 px-6 text-lg rounded-full bg-gray-700 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300" autocomplete="on" autocorrect="on" autocapitalize="none" spellcheck="false" name="q" placeholder="検索" title="検索" value="{{ word }}">
+                        <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors duration-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
                     </div>
-                </div>{% endfor %}
+                </form>
             </div>
+        </header>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {% for result in results %}
+            <div class="bg-gray-800 rounded-xl shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                {% if result["type"] == "video" %}
+                <a class="block relative" href="/watch?v={{ result['id'] }}">
+                    <div class="aspect-w-16 aspect-h-9">
+                        <img loading="lazy" class="w-full h-full object-cover" src="/thumbnail?v={{ result['id'] }}" onerror="document.cookie = 'proxy=True;max-age=2592000;';">
+                        <p class="absolute bottom-2 right-2 px-2 py-1 bg-black bg-opacity-70 text-white text-xs rounded">{{ result["length"] }}</p>
+                    </div>
+                    <div class="p-4">
+                        <p dir="auto" class="font-semibold text-gray-200">{{ result['title'] }}</p>
+                        <div class="mt-2 text-sm text-gray-400 space-y-1">
+                            <a href="/channel/{{result['authorId']}}" class="hover:text-blue-300">{{ result["author"] }}</a>
+                            <p class="video-data" dir="auto">{{ result["published"] }}</p>
+                        </div>
+                    </div>
+                </a>
+                {% elif result["type"] == "channel" %}
+                <a class="block p-4 text-center" href="/channel/{{result["id"]}}">
+                    <img loading="lazy" tabindex="-1" class="w-2/3 mx-auto rounded-full" src="{{result['thumbnail']}}">
+                    <p dir="auto" class="mt-4 font-semibold text-gray-200">{{ result["author"] }}</p>
+                </a>
+                {% elif result["type"] == "playlist" %}
+                <a class="block relative" href="/playlist?list={{result['id']}}">
+                    <div class="aspect-w-16 aspect-h-9">
+                        <img loading="lazy" tabindex="-1" class="w-full h-full object-cover" src="/thumbnail?v={{ result['thumbnail'] }}">
+                        <p class="absolute bottom-2 right-2 px-2 py-1 bg-black bg-opacity-70 text-white text-xs rounded">{{ result["count"] }}個の動画</p>
+                    </div>
+                    <div class="p-4">
+                        <p dir="auto" class="font-semibold text-gray-200">{{ result["title"] }}</p>
+                    </div>
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
         </div>
-    </div>
-    <div class="pure-g h-box">
-        <div class="pure-u-1 pure-u-lg-1-5"></div>
-        <div class="pure-u-1 pure-u-lg-3-5"></div>
-        <div class="pure-u-1 pure-u-lg-1-5" style="text-align:right">
-            <a href="{{next}}">
+        
+        <div class="w-full p-6 text-center">
+            <a href="{{next}}" class="inline-block py-2 px-6 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors duration-200">
                 次のページ
             </a>
         </div>
