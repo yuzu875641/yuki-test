@@ -32,7 +32,7 @@
         .comment-icon {
             width: 40px;
             height: 40px;
-            border-radius: 9999px; /* Tailwindの`rounded-full`に相当 */
+            border-radius: 9999px;
             object-fit: cover;
         }
     </style>
@@ -90,9 +90,6 @@
                         </div>
                     </div>
                 </div>
-
-                <div id="comments" class="bg-gray-800 p-6 rounded-xl shadow-lg">
-                    </div>
             </div>
 
             <div class="lg:col-span-1 space-y-4">
@@ -140,30 +137,6 @@
         } else {
             document.getElementById("player").currentTime = getUrlQueries().t;
         }
-        
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", "/comments?v=" + getUrlQueries().v);
-        xhr.onload = function () {
-            if (xhr.status != 500) {
-                const commentsHtml = xhr.responseText;
-                const commentsContainer = document.getElementById('comments');
-                
-                // コメントHTMLをDOM要素に変換
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(commentsHtml, 'text/html');
-                
-                // コメントアイコンにCSSクラスを適用
-                const commentIcons = doc.querySelectorAll('img');
-                commentIcons.forEach(icon => {
-                    icon.classList.add('comment-icon');
-                });
-
-                commentsContainer.innerHTML = doc.body.innerHTML;
-            } else {
-                document.getElementById('comments').innerHTML = "エラーが発生しました。再読み込みを試してください";
-            }
-        };
-        xhr.send();
         
         document.getElementById("player").style.maxHeight = document.documentElement.clientHeight * 0.8 + "px";
 
