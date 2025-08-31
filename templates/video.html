@@ -29,6 +29,12 @@
         .ui-menu .ui-menu-item:hover, .ui-menu .ui-menu-item-active {
             background-color: #4A5568;
         }
+        .comment-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 9999px;
+            object-fit: cover;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200 min-h-screen flex flex-col items-center p-4 md:p-8">
@@ -106,7 +112,7 @@
             </div>
         </div>
     </div>
-
+    
     <script>
         document.cookie = "yuki=True;max-age=2592000;";
         function getCookie(name) { let matches = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)")); return matches ? decodeURIComponent(matches[1]) : undefined; }
@@ -139,7 +145,21 @@
         xhr.open("GET", "/comments?v=" + getUrlQueries().v);
         xhr.onload = function () {
             if (xhr.status != 500) {
-                document.getElementById('comments').innerHTML = xhr.responseText;
+                // コメントのHTMLを動的に挿入する際に、アイコンのスタイルを適用する
+                const commentsHtml = xhr.responseText;
+                const commentsContainer = document.getElementById('comments');
+                
+                // ここで commentsHtml 内の img タグに class="comment-icon" を追加する処理が必要になります
+                // 例えば、正規表現やDOM操作で img タグを見つけて、クラスを追加する
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(commentsHtml, 'text/html');
+                const commentIcons = doc.querySelectorAll('img');
+                
+                commentIcons.forEach(icon => {
+                    icon.classList.add('comment-icon');
+                });
+
+                commentsContainer.innerHTML = doc.body.innerHTML;
             } else {
                 document.getElementById('comments').innerHTML = "エラーが発生しました。再読み込みを試してください";
             }
