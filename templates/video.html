@@ -1,117 +1,156 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
     <title>連番を簡単に生成！！</title>
-    <link rel="stylesheet" href="/css/pure-min.css">
-    <link rel="stylesheet" href="/css/grids-responsive-min.css">
-    <link rel="stylesheet" href="/css/ionicons.min.css">
-    <link rel="stylesheet" href="/css/default.css">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500&display=swap" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <style>
+        body {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+        }
+        .ui-autocomplete {
+            background-color: #2D3748;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            color: #E2E8F0;
+        }
+        .ui-menu .ui-menu-item {
+            font-size: 1rem;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .ui-menu .ui-menu-item:hover, .ui-menu .ui-menu-item-active {
+            background-color: #4A5568;
+        }
+    </style>
 </head>
+<body class="bg-gray-900 text-gray-200 min-h-screen flex flex-col items-center p-4 md:p-8">
 
-<body class="no-theme">
-    <span style="display:none" id="dark_mode_pref"></span>
-    <div class="pure-g">
-        <div class="pure-u-1 pure-u-md-2-24"></div>
-        <div class="pure-u-1 pure-u-md-20-24" id="contents">
-            <div class="pure-g navbar h-box" style="align-items: center;">
-                <div class="pure-u-1 pure-u-md-12-24 title-container">
-                    <h2 style="text-align:center; color: #565d64;"><a href="/" style="text-decoration:none;">Yuki Youtube</a></h2>
-                    <p style="text-align:center; color: #565d64;">necolian非公式改造版</p>
-                </div>
-                <div class="pure-u-1 pure-u-md-12-24 searchbar">
-
-                    <a href="/requestform" style="margin-right: 20px;">新機能の要望やバグ報告</a>
-                    <a href="/bbs">掲示板</a>
-                    <form id="searchForm" class="pure-form" action="/search" method="get">
-                        <fieldset>
-                            <input type="search" id="searchbox" autocomplete="on" autocorrect="on" autocapitalize="none"
-                                spellcheck="false" name="q" placeholder="検索" title="検索" value="">
-                        </fieldset>
-                    </form>
-                </div>
+    <div class="w-full max-w-7xl mx-auto space-y-8">
+        <header class="p-6 md:p-8 bg-gray-800 rounded-3xl shadow-2xl flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div class="text-center md:text-left">
+                <h1 class="text-4xl sm:text-5xl font-bold text-blue-400"><a href="/" class="hover:text-blue-300 transition-colors duration-200">Yuki Youtube</a></h1>
+                <p class="text-sm text-gray-400">necolian非公式改造版</p>
             </div>
-            <div id="player-container" class="h-box">
-                <video style="outline:none;width:100%;background-color:#000;" playsinline="" poster="/thumbnail?v={{ videoid }}" id="player" class="on-video_player video-js player-style-invidious" controls="" loadedmetadata="settime()" loop="">{% for videourl in videourls%}<source src="{{videourl}}">{% endfor %}</source></video>
+            <div class="w-full md:w-1/2 flex items-center justify-end space-x-4">
+                <a href="/requestform" class="text-sm md:text-base text-gray-400 hover:text-blue-400 transition-colors duration-200 whitespace-nowrap">新機能の要望やバグ報告</a>
+                <a href="/bbs" class="text-sm md:text-base text-gray-400 hover:text-blue-400 transition-colors duration-200 whitespace-nowrap">掲示板</a>
+                <form id="searchForm" class="w-full relative" action="/search" method="get">
+                    <input type="search" id="searchbox" autocomplete="on" autocorrect="on" autocapitalize="none" spellcheck="false" name="q" placeholder="検索" title="検索" value="" class="w-full py-2 px-4 rounded-full bg-gray-700 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300">
+                    <button type="submit" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </form>
             </div>
-            <div class="h-box">
-                <h1>{{ videotitle }}</h1>
-            </div>
-            <div class="pure-g">
-                <div class="pure-u-1 pure-u-lg-1-5">
-                    <a href="{{ videourls[0] }}" target="_blank">ダウンロード</a><br>
-                    <a
-                        href="javascript:{navigator.share({title: '動画を共有',text: '{{videotitle}}',url: location.protocol+'//'+document.domain+'/watch?v={{ videoid }}'+'&t='+Math.floor(document.getElementById('player').currentTime),})}">現時点の動画を共有</a><br>
-                    <a
-                        href="javascript:{navigator.share({title: '動画を共有',text: '{{videotitle}}',url: location.href,})}">動画を共有</a><br>
-                    <hr>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 space-y-6">
+                <div id="player-container" class="bg-black rounded-xl overflow-hidden shadow-lg">
+                    <video style="outline:none;width:100%;" playsinline="" poster="/thumbnail?v={{ videoid }}" id="player" class="video-js w-full" controls="" loadedmetadata="settime()" loop="">{% for videourl in videourls%}<source src="{{videourl}}">{% endfor %}</video>
                 </div>
-                <div class="pure-u-1 pure-u-lg-3-5">
-                    <div class="h-box">
-                        <a href="/channel/{{authorid}}" style="display:block;width:fit-content;width:-moz-fit-content">
-                            <div class="channel-profile">
+                
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg space-y-4">
+                    <h1 class="text-xl sm:text-2xl font-bold">{{ videotitle }}</h1>
+                    <a href="/channel/{{authorid}}" class="flex items-center space-x-4 group">
+                        <img class="w-12 h-12 rounded-full ring-2 ring-blue-400 group-hover:ring-blue-500 transition-colors" src="{{authoricon}}" alt="{{ author }}のチャンネルアイコン">
+                        <span id="channel-name" class="text-gray-200 text-base font-semibold">{{ author }}</span>
+                    </a>
+                    
+                    <div id="description-box" class="mt-4">
+                        <p id="descriptionWrapper" class="text-sm text-gray-400 leading-relaxed">{{ description | safe}}</p>
+                    </div>
 
-                                <img src="{{authoricon}}">
-
-                                <span id="channel-name">{{ author }}</span>
-                            </div>
-                        </a>
-                        <div id="description-box">
-                            <div id="descriptionWrapper">{{ description | safe}}</div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+                        <div class="flex space-x-4 text-blue-400 text-sm md:text-base">
+                            <a href="{{ videourls[0] }}" target="_blank" class="hover:underline">ダウンロード</a>
+                            <a href="javascript:{navigator.share({title: '動画を共有',text: '{{videotitle}}',url: location.protocol+'//'+document.domain+'/watch?v={{ videoid }}'+'&t='+Math.floor(document.getElementById('player').currentTime),})}" class="hover:underline">現時点の動画を共有</a>
+                            <a href="javascript:{navigator.share({title: '動画を共有',text: '{{videotitle}}',url: location.href,})}" class="hover:underline">動画を共有</a>
                         </div>
-                        <hr>
-                        <div id="comments">
+                        <div class="flex items-center space-x-4 text-sm text-gray-400">
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" id="loop" onchange="changeloop()" class="form-checkbox h-4 w-4 text-blue-600 rounded">
+                                <span>ループ再生</span>
+                            </label>
                         </div>
                     </div>
                 </div>
-                <div class="pure-u-1 pure-u-lg-1-5">
-                    <!--自動再生<input type="checkbox" id="autonext" onchange="checkautoplay()"><br>-->
-                    ループ再生<input type="checkbox" id="loop" onchange="changeloop()">
-                    {% for re in res %}
-                    <a href="/watch?v={{ re['id'] }}">
 
-                        <div class="thumbnail">
-                            <img loading="lazy" class="thumbnail" src="/thumbnail?v={{ re['id']}}">
+                <div id="comments" class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    </div>
+            </div>
+
+            <div class="lg:col-span-1 space-y-4">
+                {% for re in res %}
+                <a href="/watch?v={{ re['id'] }}" class="block transform hover:scale-105 transition-transform duration-300">
+                    <div class="flex items-start space-x-4 bg-gray-800 p-4 rounded-xl shadow-md">
+                        <div class="flex-shrink-0 w-2/5">
+                            <img loading="lazy" class="rounded-lg w-full h-auto" src="/thumbnail?v={{ re['id']}}" alt="動画サムネイル">
                         </div>
-                        <p style="width:100%">{{re["title"]}}</p>
-                    </a><br>
-                    <a href="/channel/{{re['authorId']}}">{{re["author"]}}</a>{% endfor %}
-                </div>
+                        <div class="flex-grow">
+                            <p class="font-semibold text-gray-200 text-sm leading-tight">{{re["title"]}}</p>
+                            <p class="text-gray-400 text-xs mt-1">{{re["author"]}}</p>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
             </div>
         </div>
     </div>
-    <div class="pure-u-1 pure-u-md-2-24"></div>
+
     <script>
         document.cookie = "yuki=True;max-age=2592000;";
         function getCookie(name) { let matches = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)")); return matches ? decodeURIComponent(matches[1]) : undefined; }
-        //document.getElementById("autonext").checked = getCookie("autonext");
-        function checkautoplay(){document.cookie = "autonext="+document.getElementById("autonext").checked+";max-age=2592000;";}
-        document.getElementById("loop").checked = getCookie("loop");
+        
+        document.getElementById("loop").checked = getCookie("loop") === "true";
         document.getElementById("player").loop = document.getElementById("loop").checked;
-        function changeloop(){document.cookie = "autonext="+document.getElementById("loop").checked+";max-age=2592000;";document.getElementById("player").loop = document.getElementById("loop").checked}
-        //function sleep(waitMsec) {var startMsec = new Date();while (new Date() - startMsec < waitMsec);}
-        //function autopage(){if (document.getElementById('autonext').checked) {sleep(5000);document.cookie = "autonext=true;max-age=2592000;";location.href = "/watch?v={{res[0]["id"]}}";}else{document.cookie = "autonext=false;max-age=2592000;";}}
-        function getUrlQueries() { var queryStr = window.location.search.slice(1); queries = {}; queryStr.split('&').forEach(function (queryStr) { var queryArr = queryStr.split('='); queries[queryArr[0]] = queryArr[1]; }); return queries; }
-        if (typeof getUrlQueries().t === "undefined") { t = 0; } else { document.getElementById("player").currentTime = getUrlQueries().t; }
+
+        function changeloop(){
+            document.cookie = "loop=" + document.getElementById("loop").checked + ";max-age=2592000;";
+            document.getElementById("player").loop = document.getElementById("loop").checked;
+        }
+
+        function getUrlQueries() {
+            var queryStr = window.location.search.slice(1);
+            queries = {};
+            queryStr.split('&').forEach(function (queryStr) {
+                var queryArr = queryStr.split('=');
+                queries[queryArr[0]] = queryArr[1];
+            });
+            return queries;
+        }
+
+        if (typeof getUrlQueries().t === "undefined") {
+            document.getElementById("player").currentTime = 0;
+        } else {
+            document.getElementById("player").currentTime = getUrlQueries().t;
+        }
+        
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "/comments?v=" + getUrlQueries().v);
         xhr.onload = function () {
             if (xhr.status != 500) {
                 document.getElementById('comments').innerHTML = xhr.responseText;
+            } else {
+                document.getElementById('comments').innerHTML = "エラーが発生しました。再読み込みを試してください";
             }
-            else { document.getElementById('comments').innerHTML = "エラーが発生しました。再読み込みを試してください"; }
         };
         xhr.send();
-        if (document.domain != "yukigennumber.ddo.jp") { document.getElementById("ads_box").innerHTML = ""; }
+        
         document.getElementById("player").style.maxHeight = document.documentElement.clientHeight * 0.8 + "px";
 
         document.onkeydown = keydown;
         function keydown(key) {
             var v = document.getElementById("player");
-
             if (key.keyCode == 32 || key.keyCode == 75) {
                 if (v.paused == true) {
                     v.play();
@@ -144,5 +183,4 @@
     　　　　　    delay: 300
             });</script>
 </body>
-
 </html>
