@@ -103,7 +103,7 @@ def apicommentsrequest(url):
 
 
 # 動画取得用APIリストの作成
-video_apis = ast.literal_eval(requests.get('https://raw.githubusercontent.com/siawaseok3/yuki-by-siawaseok/refs/heads/main/api_list.txt').text)
+video_apis = ast.literal_eval(requests.get('https://raw.githubusercontent.com/yuzu875641/yuki-test/refs/heads/main/api_list.txt').text)
 
 # 動画データを取得する関数
 def get_data(videoid):
