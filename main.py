@@ -12,7 +12,7 @@ from cache import cache
 
 max_api_wait_time = 8
 max_time = 12
-apis = ast.literal_eval(requests.get('https://raw.githubusercontent.com/siawaseok3/yuki-by-siawaseok/refs/heads/main/api_list.txt').text)
+apis = ast.literal_eval(requests.get('https://raw.githubusercontent.com/yuzu875641/yuki-test/refs/heads/main/api_list.txt').text)
 url = "https://yukibbs-server.onrender.com/"
 version = "1.0"
 
