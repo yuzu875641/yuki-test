@@ -7,8 +7,8 @@ import random
 import os
 from cache import cache
 
-max_api_wait_time = 3
-max_time = 10
+max_api_wait_time = 5
+max_time = 20
 apis = [r"https://34.97.38.181/", r"https://cal1.iv.ggtyler.dev/", r"https://invidious.nikkosphere.com/", r"https://invidious.ducks.party/", r"https://lekker.gay/", r"https://invidious.lunivers.trade/", r"https://super8.absturztau.be/", r"https://iv.melmac.space/", r"https://invidious.jing.rocks/", r"https://inv.nadeko.net/", r"https://invidious.nerdvpn.de/", r"https://invidious.privacyredirect.com/", r"https://youtube.076.ne.jp/", r"https://vid.puffyan.us/", r"https://inv.riverside.rocks/", r"https://invidio.xamh.de/", r"https://y.com.sb/", r"https://invidious.sethforprivacy.com/", r"https://invidious.tiekoetter.com/", r"https://inv.bp.projectsegfau.lt/", r"https://inv.vern.cc/", r"https://inv.privacy.com.de/", r"https://invidious.rhyshl.live/", r"https://invidious.slipfox.xyz/", r"https://invidious.weblibre.org/", r"https://invidious.namazso.eu/", r"https://invidious.reallyaweso.me", r"https://invidious.adminforge.de", r"https://invidious.esmailelbob.xyz", r"https://invidious.perennialte.ch", r"https://invidious.dhusch.de", r"https://invidious.0011.lt", r"https://invidious.materialio.us", r"https://usa-proxy2.poketube.fun", r"https://invidious.darkness.service", r"https://invidious.flokinet.to", r"https://invidious.fdn.fr", r"https://iv.duti.dev", r"https://yt.artemislena.eu", r"https://invidious.projectsegfau.lt", r"https://id.420129.xyz", r"https://nyc1.iv.ggtyler.dev", r"https://inv.in.projectsegfau.lt", r"https://invidious.drgns.space", r"https://inv.us.projectsegfau.lt", r"https://youtube.mosesmang.com", r"https://invidious.incogniweb.net", r"https://invid-api.poketube.fun", r"https://inv.tux.pizza", r"https://pol1.iv.ggtyler.dev", r"https://invidious.protokolla.fi", r"https://invidious.einfachzocken.eu", r"https://yewtu.be", r"https://iv.datura.network", r"https://invidious.f5.si", r"https://invidious.privacydev.net", r"https://eu-proxy.poketube.fun", r"https://yt.drgnz.club", r"https://invidious.private.coffee", r"https://youtube.alt.tyil.nl/", r"https://rust.oskamp.nl/", r"https://iv.ggtyler.dev", r"https://invidious.nietzospannend.nl/", r"https://siawaseok-wakame-server2.glitch.me/"]
 url = requests.get(r'https://raw.githubusercontent.com/mochidukiyukimi/yuki-youtube-instance/main/instance.txt').text.rstrip()
 version = "1.0"
@@ -92,16 +92,11 @@ def apicommentsrequest(url):
             apicomments.remove(api)
     raise APItimeoutError("APIがタイムアウトしました")
 
-
-def get_info(request):
-    global version
-    return json.dumps([version,os.environ.get('RENDER_EXTERNAL_URL'),str(request.scope["headers"]),str(request.scope['router'])[39:-2]])
-
 def get_data(videoid):
     t = json.loads(apirequest(r"api/v1/videos/"+ urllib.parse.quote(videoid)))
     if not t.get("formatStreams") or len(t["formatStreams"]) == 0:
         return "error"
-    
+
     # recommendedVideos のキー名に対応
     if 'recommendedvideo' in t:
         recommended_videos = t["recommendedvideo"]
@@ -141,11 +136,12 @@ def get_data(videoid):
         for stream in adaptive
         if stream.get('container') == 'webm' and stream.get('resolution')
     ]
+
     return [
       {
-        # 既存処理（ここでは formatStreams のURLを逆順にして上位2件を使用）
-        'video_urls': list(reversed([i["url"] for i in t["formatStreams"]]))[:2],
-        # 追加：高画質動画と音声のURL
+        # 通常画質の動画URLを取得
+        'normal_video_urls': list(reversed([i["url"] for i in t["formatStreams"]]))[:2],
+        # 高画質動画と音声のURLを取得
         'highstream_url': highstream_url,
         'audio_url': audio_url,
         'description_html': t["descriptionHtml"].replace("\n", "<br>"),
@@ -169,8 +165,8 @@ def get_data(videoid):
         "length_text": str(datetime.timedelta(seconds=i["lengthSeconds"])),
         "view_count_text": i["viewCountText"]
     } for i in recommended_videos]
-    
     ]
+    
 def get_search(q, page):
     errorlog = []
     try:
