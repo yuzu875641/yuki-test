@@ -81,6 +81,7 @@
                             <a href="{{ videourls[0] }}" target="_blank" class="hover:underline">ダウンロード</a>
                             <a href="javascript:{navigator.share({title: '動画を共有',text: '{{videotitle}}',url: location.protocol+'//'+document.domain+'/watch?v={{ videoid }}'+'&t='+Math.floor(document.getElementById('player').currentTime),})}" class="hover:underline">現時点の動画を共有</a>
                             <a href="javascript:{navigator.share({title: '動画を共有',text: '{{videotitle}}',url: location.href,})}" class="hover:underline">動画を共有</a>
+                            <a href="#" id="hd-toggle-button" onclick="toggleHd(event)" class="hover:underline">高画質化</a>
                         </div>
                         <div class="flex items-center space-x-4 text-sm text-gray-400">
                             <label class="flex items-center space-x-2 cursor-pointer">
@@ -152,6 +153,42 @@
             }
         }
     </script>
+    
+    <!-- 高画質化機能の追加 -->
+    <script>
+        // Pythonから渡されたURLを変数に格納
+        const highstreamUrl = '{{ highstream_url }}';
+        const originalUrls = ['{{ videourls[0] }}'];
+
+        let isHdMode = false;
+        const hdButton = document.getElementById('hd-toggle-button');
+        const player = document.getElementById('player');
+        
+        // 元のビデオソースのURLを保存
+        let originalSource = player.querySelector('source').src;
+        
+        function toggleHd(event) {
+            event.preventDefault(); // リンクとしてのデフォルト動作を無効化
+            if (highstreamUrl && highstreamUrl !== 'None') { // highstreamUrlが存在するか確認
+                if (isHdMode) {
+                    // 通常モードに戻す
+                    player.src = originalSource;
+                    hdButton.innerText = '高画質化';
+                    isHdMode = false;
+                } else {
+                    // 高画質モードに切り替える
+                    player.src = highstreamUrl;
+                    hdButton.innerText = '通常に戻す';
+                    isHdMode = true;
+                }
+                player.load(); // 新しいソースを読み込む
+                player.play(); // 再生を開始する
+            } else {
+                alert('高画質動画は利用できません。');
+            }
+        }
+    </script>
+
     <script>$('#searchbox').autocomplete({
                 source: function (request, response) {
                     {
@@ -176,4 +213,3 @@
             });</script>
 </body>
 </html>
-
