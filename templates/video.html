@@ -62,7 +62,8 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 space-y-6">
                 <div id="player-container" class="bg-black rounded-xl overflow-hidden shadow-lg">
-                    <video style="outline:none;width:100%;" playsinline="" poster="/thumbnail?v={{ videoid }}" id="player" class="video-js w-full" controls="" loadedmetadata="settime()" loop="">{% for videourl in videourls%}<source src="{{videourl}}">{% endfor %}</video>
+                    <video style="outline:none;width:100%;" playsinline="" poster="/thumbnail?v={{ videoid }}" id="player" class="video-js w-full" controls="" loadedmetadata="settime()" loop=""></video>
+                    <audio id="audio-player" class="hidden" controls loop></audio>
                 </div>
                 
                 <div class="bg-gray-800 p-6 rounded-xl shadow-lg space-y-4">
@@ -78,10 +79,18 @@
 
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
                         <div class="flex space-x-4 text-blue-400 text-sm md:text-base">
-                            <a href="{{ videourls[0] }}" target="_blank" class="hover:underline">ダウンロード</a>
+                            <a href="#" id="download-button" class="hover:underline">ダウンロード</a>
                             <a href="javascript:{navigator.share({title: '動画を共有',text: '{{videotitle}}',url: location.protocol+'//'+document.domain+'/watch?v={{ videoid }}'+'&t='+Math.floor(document.getElementById('player').currentTime),})}" class="hover:underline">現時点の動画を共有</a>
                             <a href="javascript:{navigator.share({title: '動画を共有',text: '{{videotitle}}',url: location.href,})}" class="hover:underline">動画を共有</a>
-                            <a href="#" id="hd-toggle-button" onclick="toggleHd(event)" class="hover:underline">高画質化</a>
+                            <div class="relative inline-block text-left">
+                                <button id="quality-toggle-button" class="hover:underline focus:outline-none">
+                                    画質変更
+                                </button>
+                                <div id="quality-dropdown" class="absolute left-0 mt-2 w-32 rounded-md shadow-lg bg-gray-700 ring-1 ring-black ring-opacity-5 hidden z-10">
+                                    <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="quality-toggle-button">
+                                        </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="flex items-center space-x-4 text-sm text-gray-400">
                             <label class="flex items-center space-x-2 cursor-pointer">
@@ -116,11 +125,10 @@
         function getCookie(name) { let matches = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)")); return matches ? decodeURIComponent(matches[1]) : undefined; }
         
         document.getElementById("loop").checked = getCookie("loop") === "true";
-        document.getElementById("player").loop = document.getElementById("loop").checked;
-
         function changeloop(){
             document.cookie = "loop=" + document.getElementById("loop").checked + ";max-age=2592000;";
             document.getElementById("player").loop = document.getElementById("loop").checked;
+            document.getElementById("audio-player").loop = document.getElementById("loop").checked;
         }
 
         function getUrlQueries() {
@@ -135,8 +143,10 @@
 
         if (typeof getUrlQueries().t === "undefined") {
             document.getElementById("player").currentTime = 0;
+            document.getElementById("audio-player").currentTime = 0;
         } else {
             document.getElementById("player").currentTime = getUrlQueries().t;
+            document.getElementById("audio-player").currentTime = getUrlQueries().t;
         }
         
         document.getElementById("player").style.maxHeight = document.documentElement.clientHeight * 0.8 + "px";
@@ -144,49 +154,107 @@
         document.onkeydown = keydown;
         function keydown(key) {
             var v = document.getElementById("player");
+            var a = document.getElementById("audio-player");
             if (key.keyCode == 32 || key.keyCode == 75) {
                 if (v.paused == true) {
                     v.play();
+                    a.play();
                 } else {
                     v.pause();
+                    a.pause();
                 }
             }
         }
     </script>
     
-    <!-- 高画質化機能の追加 -->
     <script>
-        // Pythonから渡されたURLを変数に格納
-        const highstreamUrl = '{{ highstream_url }}';
-        const originalUrls = ['{{ videourls[0] }}'];
+        // Pythonから渡されたURLのリストを変数に格納
+        const streamUrls = JSON.parse('{{ streamUrls | tojson }}');
+        const audioUrl = '{{ audio_url }}';
 
-        let isHdMode = false;
-        const hdButton = document.getElementById('hd-toggle-button');
         const player = document.getElementById('player');
-        
-        // 元のビデオソースのURLを保存
-        let originalSource = player.querySelector('source').src;
-        
-        function toggleHd(event) {
-            event.preventDefault(); // リンクとしてのデフォルト動作を無効化
-            if (highstreamUrl && highstreamUrl !== 'None') { // highstreamUrlが存在するか確認
-                if (isHdMode) {
-                    // 通常モードに戻す
-                    player.src = originalSource;
-                    hdButton.innerText = '高画質化';
-                    isHdMode = false;
-                } else {
-                    // 高画質モードに切り替える
-                    player.src = highstreamUrl;
-                    hdButton.innerText = '通常に戻す';
-                    isHdMode = true;
-                }
-                player.load(); // 新しいソースを読み込む
-                player.play(); // 再生を開始する
+        const audioPlayer = document.getElementById('audio-player');
+        const qualityDropdown = document.getElementById('quality-dropdown');
+        const qualityToggleButton = document.getElementById('quality-toggle-button');
+        const downloadButton = document.getElementById('download-button');
+        let currentQuality = '';
+
+        // 初期設定
+        function setInitialSource() {
+            if (streamUrls && streamUrls.length > 0) {
+                // 最も高画質なオプションをデフォルトに設定
+                const initialQuality = streamUrls[0];
+                player.src = initialQuality.url;
+                currentQuality = initialQuality.resolution;
+                downloadButton.href = initialQuality.url;
             } else {
-                alert('高画質動画は利用できません。');
+                // オプションがない場合
+                qualityToggleButton.style.display = 'none';
+                downloadButton.style.display = 'none';
+            }
+
+            if (audioUrl && audioUrl !== 'None') {
+                audioPlayer.src = audioUrl;
             }
         }
+        
+        // 画質オプションのドロップダウンメニューを生成
+        function createQualityDropdown() {
+            const menu = qualityDropdown.querySelector('.py-1');
+            menu.innerHTML = '';
+            streamUrls.forEach(option => {
+                const button = document.createElement('a');
+                button.href = '#';
+                button.className = 'block px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 transition-colors duration-200';
+                button.innerText = option.resolution;
+                button.setAttribute('data-url', option.url);
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (option.resolution !== currentQuality) {
+                        const currentTime = player.currentTime;
+                        player.src = option.url;
+                        downloadButton.href = option.url;
+                        player.currentTime = currentTime;
+                        player.load();
+                        player.play();
+                        if (!audioPlayer.paused) {
+                           audioPlayer.play();
+                        }
+                        currentQuality = option.resolution;
+                    }
+                    qualityDropdown.classList.add('hidden');
+                });
+                menu.appendChild(button);
+            });
+        }
+
+        // 画質変更ボタンのクリックイベント
+        qualityToggleButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            qualityDropdown.classList.toggle('hidden');
+        });
+
+        // プレイヤーの再生・停止とオーディオプレイヤーの同期
+        player.addEventListener('play', () => {
+            if (!audioPlayer.src) return;
+            audioPlayer.currentTime = player.currentTime;
+            audioPlayer.play();
+        });
+
+        player.addEventListener('pause', () => {
+            audioPlayer.pause();
+        });
+
+        // 初期設定を呼び出し
+        setInitialSource();
+        createQualityDropdown();
+
+        // ページ外をクリックしたらドロップダウンを閉じる
+        window.addEventListener('click', function(event) {
+            if (!qualityToggleButton.contains(event.target) && !qualityDropdown.contains(event.target)) {
+                qualityDropdown.classList.add('hidden');
+            }
+        });
     </script>
 
     <script>$('#searchbox').autocomplete({
@@ -202,12 +270,9 @@
                     }
                 },
     　　　　　    select: function(event, ui) {
-                        // 候補が選択されたときの処理
-                        // テキストボックスに選択したアイテムをセット
                         $("#searchbox").val(ui.item.value);
-                        // フォームを送信
-                        $("#searchForm").submit(); // フォームを送信
-                        return false; // jQuery UIのデフォルトの動作をキャンセル
+                        $("#searchForm").submit();
+                        return false;
                 },
     　　　　　    delay: 300
             });</script>
