@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <title>指数</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <style>
+        body {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+        }
+        .ui-autocomplete {
+            background-color: #2D3748;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            color: #E2E8F0;
+        }
+        .ui-menu .ui-menu-item {
+            font-size: 1rem;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .ui-menu .ui-menu-item:hover, .ui-menu .ui-menu-item-active {
+            background-color: #4A5568;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 text-gray-200 min-h-screen flex flex-col items-center p-4 md:p-8">
+    <div class="w-full max-w-7xl mx-auto space-y-8">
+        <header class="p-6 md:p-8 bg-gray-800 rounded-3xl shadow-2xl flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div class="text-center md:text-left">
+                <h1 class="text-4xl sm:text-5xl font-bold text-blue-400"><a href="/" class="hover:text-blue-300 transition-colors duration-200">Yuki Youtube</a></h1>
+                <p class="text-sm text-gray-400">ゆず改造インスタンス</p>
+            </div>
+            <div class="w-full md:w-1/2">
+                <form id="searchForm" class="w-full relative" action="/search" method="get">
+                    <input type="search" id="searchbox" autocomplete="on" autocorrect="on" autocapitalize="none" spellcheck="false" name="q" placeholder="検索" title="検索" class="w-full py-3 px-6 text-lg rounded-full bg-gray-700 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300">
+                    <button type="submit" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </header>
+
+        <div class="bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
+            <img src="{{channelicon}}" alt="{{channelname}}のチャンネルアイコン" class="w-24 h-24 sm:w-32 sm:h-32 rounded-full ring-2 ring-blue-400 object-cover">
+            <div class="text-center sm:text-left">
+                <h2 class="text-2xl sm:text-3xl font-bold">{{channelname}}</h2>
+                <div id="descriptionWrapper" class="mt-2 text-gray-400 leading-relaxed">
+                    <p class="whitespace-pre-wrap text-sm">{{channelprofile | safe}}</p>
+                </div>
+            </div>
+        </div>
+
+        <hr class="border-gray-700">
+        
+        <h3 class="text-xl sm:text-2xl font-bold mt-8 mb-4">動画</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {% for result in results %}
+            {% if result["type"] == "video" %}
+            <a href="/watch?v={{ result['id'] }}" class="block transform hover:scale-105 transition-transform duration-300">
+                <div class="bg-gray-800 rounded-xl shadow-md p-4 space-y-2">
+                    <div class="relative overflow-hidden rounded-lg">
+                        <img loading="lazy" class="w-full h-auto object-cover" src="/thumbnail?v={{ result['id'] }}" onerror="this.src='/path/to/placeholder.jpg'; document.cookie = 'proxy=True;max-age=2592000;';">
+                        <p class="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded-md">{{result["length"]}}</p>
+                    </div>
+                    <p dir="auto" class="font-semibold text-sm leading-tight text-gray-200">{{ result['title'] }}</p>
+                    <div class="flex items-center text-sm text-gray-400">
+                        <span class="mr-2">{{result["author"]}}</span>
+                        <p class="video-data" dir="auto">{{result["published"]}}</p>
+                    </div>
+                </div>
+            </a>
+            {% elif result["type"] == "channel" %}
+            <a href="/channel/{{result["id"]}}" class="block transform hover:scale-105 transition-transform duration-300">
+                <div class="bg-gray-800 rounded-xl shadow-md p-4 text-center">
+                    <img loading="lazy" tabindex="-1" class="w-16 h-16 mx-auto rounded-full object-cover" src="{{result["thumbnail"]}}" alt="{{result['author']}}のチャンネルアイコン">
+                    <p dir="auto" class="mt-2 font-semibold text-gray-200">{{result["author"]}}</p>
+                </div>
+            </a>
+            {% elif result["type"] == "playlist" %}
+            <a href="/playlist?list={{result["id"]}}" class="block transform hover:scale-105 transition-transform duration-300">
+                <div class="bg-gray-800 rounded-xl shadow-md p-4 space-y-2">
+                    <div class="relative overflow-hidden rounded-lg">
+                        <img loading="lazy" tabindex="-1" class="w-full h-auto object-cover" src="/thumbnail?v={{ result['thumbnail'] }}">
+                        <p class="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded-md">{{result["count"]}}個の動画</p>
+                    </div>
+                    <p dir="auto" class="font-semibold text-sm leading-tight text-gray-200">{{result["title"]}}</p>
+                </div>
+            </a>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>$('#searchbox').autocomplete({
+                source: function (request, response) {
+                    {
+                        var url = "/suggest?keyword="+ request.term
+                        var xhr = new XMLHttpRequest();
+                        xhr.open("GET", url);
+                        xhr.onload = function() {
+                            response(JSON.parse(xhr.responseText));
+                        }
+                        xhr.send();
+                    }
+                },
+    　　　　　    select: function(event, ui) {
+                        $("#searchbox").val(ui.item.value);
+                        $("#searchForm").submit();
+                        return false;
+                },
+    　　　　　    delay: 300
+            });
+    </script>
+</body>
+</html>
