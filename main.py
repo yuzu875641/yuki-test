@@ -371,3 +371,12 @@ def page(request: Request,__):
 @app.exception_handler(APItimeoutError)
 def APIwait(request: Request,exception: APItimeoutError):
     return template("APIwait.html",{"request": request},status_code=500)
+@app.get("/api/v1/channels/{id}/streams")
+def get_channel_streams(id: str):
+    try:
+        data = json.loads(apichannelrequest(f"api/v1/channels/{id}/streams"))
+        return JSONResponse(content=data)
+    except APItimeoutError:
+        return JSONResponse(content={"error": "API timed out"}, status_code=500)
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
