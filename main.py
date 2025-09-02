@@ -98,21 +98,44 @@ def get_info(request):
     return json.dumps([version,os.environ.get('RENDER_EXTERNAL_URL'),str(request.scope["headers"]),str(request.scope['router'])[39:-2]])
 
 def get_data(videoid):
-    global logs
     t = json.loads(apirequest(r"api/v1/videos/"+ urllib.parse.quote(videoid)))
     if not t.get("formatStreams") or len(t["formatStreams"]) == 0:
         return "error"
     
-    # 高画質ストリームのURLを検索するロジックを追加
-    highstreamUrl = None
+    # 画質リストを生成するロジック
+    quality_list = []
+    
+    # 既存のvideourlsから初期画質を追加
+    for stream in t["formatStreams"]:
+        quality_list.append({
+            "quality": stream.get("qualityLabel"),
+            "url": stream.get("url"),
+            "is_default": True
+        })
+    
+    # adaptiveFormatsからwebm形式の動画ストリームを追加
     if "adaptiveFormats" in t:
         for stream in t["adaptiveFormats"]:
-            if stream.get("container") == "webm" and stream.get("resolution") == "1080p":
-                highstreamUrl = stream.get("url")
-                break
+            if stream.get("mimeType", "").startswith("video/webm"):
+                quality_list.append({
+                    "quality": stream.get("qualityLabel"),
+                    "url": stream.get("url"),
+                    "is_default": False
+                })
+
+    # 画質リストを解像度の高い順にソート
+    quality_list.sort(key=lambda x: int(x["quality"].replace('p', '')), reverse=True)
     
-    # 戻り値のリストに highstreamUrl を追加
-    return [{"id":i["videoId"],"title":i["title"],"authorId":i["authorId"],"author":i["author"]} for i in t["recommendedVideos"]],list(reversed([i["url"] for i in t["formatStreams"]]))[:2],t["descriptionHtml"].replace("\n","<br>"),t["title"],t["authorId"],t["author"],t["authorThumbnails"][-1]["url"], highstreamUrl
+    return [
+        [{"id":i["videoId"],"title":i["title"],"authorId":i["authorId"],"author":i["author"]} for i in t["recommendedVideos"]],
+        list(reversed([i["url"] for i in t["formatStreams"]]))[:2],
+        t["descriptionHtml"].replace("\n","<br>"),
+        t["title"],
+        t["authorId"],
+        t["author"],
+        t["authorThumbnails"][-1]["url"],
+        quality_list  # <-- 画質リストを追加
+    ]
 
 def get_search(q, page):
     errorlog = []
@@ -260,11 +283,11 @@ def video(v:str,response: Response,request: Request,yuki: Union[str] = Cookie(No
     authorid = data[4]
     author = data[5]
     authoricon = data[6]
-    highstream_url = data[7] # <-- highstreamUrl を取得
+    quality_list = data[7] # <-- 画質リストを取得
     
     response.set_cookie("yuki","True",max_age=60 * 60 * 24 * 7)
     
-    # テンプレートに highstream_url を渡す
+    # テンプレートに quality_list を渡す
     return template('video.html', {
         "request": request,
         "videoid": videoid,
@@ -276,7 +299,7 @@ def video(v:str,response: Response,request: Request,yuki: Union[str] = Cookie(No
         "authoricon": authoricon,
         "author": author,
         "proxy": proxy,
-        "highstream_url": highstream_url # <-- テンプレート変数として追加
+        "quality_list": quality_list # <-- テンプレート変数として追加
     })
 
 @app.get("/search", response_class=HTMLResponse)
