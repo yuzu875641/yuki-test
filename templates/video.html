@@ -85,7 +85,7 @@
                             <div class="relative inline-block text-left">
                                 <select id="quality-selector" class="bg-gray-700 text-white py-1 px-2 rounded-md appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     {% for q in quality_list %}
-                                        <option value="{{ q.url }}" {% if forloop.first %}selected{% endif %}>{{ q.quality }}</option>
+                                        <option value="{{ q.url }}">{{ q.quality }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -175,6 +175,11 @@
                     player.play();
                 }
             });
+            // ページ読み込み時に最初のオプションを自動的に選択
+            if (qualitySelector.options.length > 0) {
+                player.src = qualitySelector.options[0].value;
+                player.load();
+            }
         }
     </script>
 
