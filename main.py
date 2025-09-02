@@ -9,7 +9,7 @@ from cache import cache
 
 max_api_wait_time = 4
 max_time = 20
-apis = ['https://lekker.gay/', 'https://invidious.nikkosphere.com/', 'https://invidious.rhyshl.live/', 'https://inv.tux.pizza', 'https://pol1.iv.ggtyler.dev', 'https://yewtu.be', 'https://youtube.alt.tyil.nl/']
+apis = ['https://invidious.nikkosphere.com/', 'https://invidious.rhyshl.live/', 'https://inv.tux.pizza', 'https://pol1.iv.ggtyler.dev', 'https://yewtu.be', 'https://youtube.alt.tyil.nl/']
 url = requests.get(r'https://raw.githubusercontent.com/mochidukiyukimi/yuki-youtube-instance/main/instance.txt').text.rstrip()
 version = "1.0"
 
@@ -281,7 +281,7 @@ def video(v:str,response: Response,request: Request,yuki: Union[str] = Cookie(No
         "authoricon": authoricon,
         "author": author,
         "proxy": proxy,
-        "highstream_url": highstream_url # <-- ここでテンプレートに渡す
+        "highstream_url": highstream_url # <-- テンプレート変数として追加
     })
 
 @app.get("/search", response_class=HTMLResponse)
