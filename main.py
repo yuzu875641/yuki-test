@@ -276,14 +276,27 @@ def search(tag:str,response: Response,request: Request,page:Union[int,None]=1,yu
         return redirect("/")
     return redirect(f"/search?q={tag}")
 
-@app.get("/channel/{channelid}", response_class=HTMLResponse)
-def channel(channelid:str,response: Response,request: Request,yuki: Union[str] = Cookie(None),proxy: Union[str] = Cookie(None)):
-    if not(check_cokie(yuki)):
-        return redirect("/")
-    response.set_cookie("yuki","True",max_age=60 * 60 * 24 * 7)
-    t = get_channel(channelid)
-    return template("channel.html", {"request": request,"results":t[0],"channelname":t[1]["channelname"],"channelicon":t[1]["channelicon"],"channelprofile":t[1]["channelprofile"],"proxy":proxy})
+# 通常の動画一覧を取得するAPIエンドポイント
+@app.get("/channel/{id}")
+def get_channel_videos(id: str):
+    try:
+        data = json.loads(apirequest(f"api/v1/channels/{id}"))
+        return JSONResponse(content=data)
+    except APItimeoutError:
+        return JSONResponse(content={"error": "API timed out"}, status_code=500)
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
 
+@app.get("/channels/{id}")
+def get_channel_streams(id: str):
+    try:
+        data = json.loads(apichannelrequest(f"api/v1/channels/{id}/streams"))
+        return JSONResponse(content=data)
+    except APItimeoutError:
+        return JSONResponse(content={"error": "API timed out"}, status_code=500)
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+        
 @app.get("/answer", response_class=HTMLResponse)
 def set_cokie(q:str):
     t = get_level(q)
@@ -371,12 +384,3 @@ def page(request: Request,__):
 @app.exception_handler(APItimeoutError)
 def APIwait(request: Request,exception: APItimeoutError):
     return template("APIwait.html",{"request": request},status_code=500)
-@app.get("/api/v1/channels/{id}/streams")
-def get_channel_streams(id: str):
-    try:
-        data = json.loads(apichannelrequest(f"api/v1/channels/{id}/streams"))
-        return JSONResponse(content=data)
-    except APItimeoutError:
-        return JSONResponse(content={"error": "API timed out"}, status_code=500)
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
