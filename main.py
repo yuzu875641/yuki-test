@@ -105,36 +105,36 @@ def get_data(videoid):
     # 画質リストを生成するロジック
     quality_list = []
     
-    # 既存のvideourlsから初期画質を追加
-    for stream in t["formatStreams"]:
-        quality_list.append({
-            "quality": stream.get("qualityLabel"),
-            "url": stream.get("url"),
-            "is_default": True
-        })
-    
-    # adaptiveFormatsからwebm形式の動画ストリームを追加
-    if "adaptiveFormats" in t:
-        for stream in t["adaptiveFormats"]:
-            if stream.get("mimeType", "").startswith("video/webm"):
+    # formatStreamsから動画URLと品質を取得
+    if "formatStreams" in t:
+        for stream in t["formatStreams"]:
+            if stream.get("qualityLabel"):
                 quality_list.append({
                     "quality": stream.get("qualityLabel"),
-                    "url": stream.get("url"),
-                    "is_default": False
+                    "url": stream.get("url")
+                })
+    
+    # adaptiveFormatsからmp4形式の動画ストリームを追加（動画と音声が分かれている場合）
+    if "adaptiveFormats" in t:
+        for stream in t["adaptiveFormats"]:
+            if stream.get("mimeType", "").startswith("video/mp4") and stream.get("qualityLabel"):
+                quality_list.append({
+                    "quality": stream.get("qualityLabel"),
+                    "url": stream.get("url")
                 })
 
     # 画質リストを解像度の高い順にソート
-    quality_list.sort(key=lambda x: int(x["quality"].replace('p', '')), reverse=True)
+    quality_list.sort(key=lambda x: int(x["quality"].replace('p', '').replace('+', '')), reverse=True)
     
     return [
         [{"id":i["videoId"],"title":i["title"],"authorId":i["authorId"],"author":i["author"]} for i in t["recommendedVideos"]],
-        list(reversed([i["url"] for i in t["formatStreams"]]))[:2],
+        list(reversed([i["url"] for i in t["formatStreams"]]))[:2], # This is kept for backward compatibility but will be replaced in HTML
         t["descriptionHtml"].replace("\n","<br>"),
         t["title"],
         t["authorId"],
         t["author"],
         t["authorThumbnails"][-1]["url"],
-        quality_list  # <-- 画質リストを追加
+        quality_list # <-- 画質リストを追加
     ]
 
 def get_search(q, page):
@@ -318,7 +318,7 @@ def search(q: str, response: Response, request: Request, page: Union[int, None] 
             raise HTTPException(status_code=500, detail=f"Search API error: {error_detail}")
             return template("APIwait.html",{"request": request},status_code=500)
 
-        # 検索成功時のテンプレスキーマに結果を渡す
+        # 検索成功時のテンプレに結果を渡す
         return template("search.html", {"request": request, "results": results, "word": q, "next": f"/search?q={q}&page={page + 1}", "proxy": proxy})
 
     except HTTPException as e:
