@@ -69,7 +69,7 @@ def apichannelrequest(url):
             print(f"タイムアウト:{api}")
             apichannels.append(api)
             apichannels.remove(api)
-    raise APItimeoutError("APIがタイムアウトしました")
+    raise APItimeoutError("APIがチャンネルを返しませんでした")
 
 def apicommentsrequest(url):
     global apicomments
@@ -99,13 +99,11 @@ def get_info(request):
 
 def get_data(videoid):
     t = json.loads(apirequest(r"api/v1/videos/"+ urllib.parse.quote(videoid)))
-    if not t.get("formatStreams") or len(t["formatStreams"]) == 0:
-        return "error"
     
     # 画質リストを生成するロジック
     quality_list = []
     
-    # formatStreamsから動画URLと品質を取得
+    # formatStreams（動画と音声が統合されているストリーム）から品質を取得
     if "formatStreams" in t:
         for stream in t["formatStreams"]:
             if stream.get("qualityLabel"):
@@ -114,27 +112,38 @@ def get_data(videoid):
                     "url": stream.get("url")
                 })
     
-    # adaptiveFormatsからmp4形式の動画ストリームを追加（動画と音声が分かれている場合）
+    # adaptiveFormats（動画と音声が別々のストリーム）から動画のみの品質を取得
     if "adaptiveFormats" in t:
         for stream in t["adaptiveFormats"]:
-            if stream.get("mimeType", "").startswith("video/mp4") and stream.get("qualityLabel"):
+            # MIMEタイプが 'video' で、品質ラベルがあるストリームを追加
+            if stream.get("mimeType", "").startswith("video") and stream.get("qualityLabel"):
                 quality_list.append({
                     "quality": stream.get("qualityLabel"),
                     "url": stream.get("url")
                 })
 
-    # 画質リストを解像度の高い順にソート
-    quality_list.sort(key=lambda x: int(x["quality"].replace('p', '').replace('+', '')), reverse=True)
+    # 重複を削除し、一意な品質のリストを作成
+    unique_qualities = {item['quality']: item for item in quality_list}.values()
+
+    # 品質を数値でソート
+    def sort_key(item):
+        quality = item['quality'].replace('p', '').replace('+', '')
+        return int(quality) if quality.isdigit() else 0
+
+    sorted_quality_list = sorted(list(unique_qualities), key=sort_key, reverse=True)
+
+    # デフォルトのvideourlsを最も品質の高いストリームに設定
+    videourls = [sorted_quality_list[0]['url']] if sorted_quality_list else []
     
     return [
         [{"id":i["videoId"],"title":i["title"],"authorId":i["authorId"],"author":i["author"]} for i in t["recommendedVideos"]],
-        list(reversed([i["url"] for i in t["formatStreams"]]))[:2], # This is kept for backward compatibility but will be replaced in HTML
+        videourls,
         t["descriptionHtml"].replace("\n","<br>"),
         t["title"],
         t["authorId"],
         t["author"],
         t["authorThumbnails"][-1]["url"],
-        quality_list # <-- 画質リストを追加
+        sorted_quality_list  # <-- 画質リストを渡す
     ]
 
 def get_search(q, page):
