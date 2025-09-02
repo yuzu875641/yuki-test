@@ -6,6 +6,7 @@ import datetime
 import random
 import os
 from cache import cache
+from fastapi import HTTPException
 
 max_api_wait_time = 4
 max_time = 20
@@ -284,6 +285,23 @@ def channel(channelid:str,response: Response,request: Request,yuki: Union[str] =
     t = get_channel(channelid)
     return template("channel.html", {"request": request,"results":t[0],"channelname":t[1]["channelname"],"channelicon":t[1]["channelicon"],"channelprofile":t[1]["channelprofile"],"proxy":proxy})
 
+@app.get("/api/v1/channels/{channelId}/streams")
+def get_streams(channelId: str):
+    try:
+        response = apichannelrequest(fr"api/v1/channels/{urllib.parse.quote(channelId)}/streams")
+        data = json.loads(response)
+        
+        if 'videos' in data:
+            # streams.jsonのデータ形式に合わせて、liveNowがtrueの動画のみをフィルタリング
+            live_streams = [video for video in data['videos'] if video.get('liveNow') is True]
+            return {"videos": live_streams}
+        else:
+            return {"videos": []}
+    except APItimeoutError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="APIでエラーが発生しました")
+        
 @app.get("/answer", response_class=HTMLResponse)
 def set_cokie(q:str):
     t = get_level(q)
