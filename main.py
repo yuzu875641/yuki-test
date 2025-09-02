@@ -7,9 +7,9 @@ import random
 import os
 from cache import cache
 
-max_api_wait_time = 3
-max_time = 10
-apis = ['https://nyc1.iv.ggtyler.dev/', 'https://lekker.gay/', 'https://invidious.nikkosphere.com/', 'https://invidious.rhyshl.live/', 'https://invid-api.poketube.fun', 'https://inv.tux.pizza', 'https://pol1.iv.ggtyler.dev', 'https://yewtu.be', 'https://youtube.alt.tyil.nl/']
+max_api_wait_time = 4
+max_time = 20
+apis = ['https://lekker.gay/', 'https://invidious.nikkosphere.com/', 'https://invidious.rhyshl.live/', 'https://inv.tux.pizza', 'https://pol1.iv.ggtyler.dev', 'https://yewtu.be', 'https://youtube.alt.tyil.nl/']
 url = requests.get(r'https://raw.githubusercontent.com/mochidukiyukimi/yuki-youtube-instance/main/instance.txt').text.rstrip()
 version = "1.0"
 
@@ -98,11 +98,28 @@ def get_info(request):
     return json.dumps([version,os.environ.get('RENDER_EXTERNAL_URL'),str(request.scope["headers"]),str(request.scope['router'])[39:-2]])
 
 def get_data(videoid):
-    global logs
     t = json.loads(apirequest(r"api/v1/videos/"+ urllib.parse.quote(videoid)))
     if not t.get("formatStreams") or len(t["formatStreams"]) == 0:
         return "error"
-    return [{"id":i["videoId"],"title":i["title"],"authorId":i["authorId"],"author":i["author"]} for i in t["recommendedVideos"]],list(reversed([i["url"] for i in t["formatStreams"]]))[:2],t["descriptionHtml"].replace("\n","<br>"),t["title"],t["authorId"],t["author"],t["authorThumbnails"][-1]["url"]
+    
+    # 高画質ストリームのURLを検索
+    highstreamUrl = None
+    if "adaptiveFormats" in t:
+        for stream in t["adaptiveFormats"]:
+            if stream.get("container") == "webm" and stream.get("resolution") == "1080p":
+                highstreamUrl = stream.get("url")
+                break
+    
+    return [
+        [{"id":i["videoId"],"title":i["title"],"authorId":i["authorId"],"author":i["author"]} for i in t["recommendedVideos"]],
+        list(reversed([i["url"] for i in t["formatStreams"]]))[:2],
+        t["descriptionHtml"].replace("\n","<br>"),
+        t["title"],
+        t["authorId"],
+        t["author"],
+        t["authorThumbnails"][-1]["url"],
+        highstreamUrl  # <-- ここで高画質URLを追加
+    ]
 
 def get_search(q, page):
     errorlog = []
@@ -238,11 +255,34 @@ def video(v:str,response: Response,request: Request,yuki: Union[str] = Cookie(No
         return redirect("/")
     response.set_cookie(key="yuki", value="True",max_age=7*24*60*60)
     videoid = v
-    t = get_data(videoid)
-    if (t == "error"):
+    data = get_data(videoid)
+    if (data == "error"):
             return template("error.html",{"request": request,"status_code":"502 - Bad Gateway","message": "ビデオ取得時のAPIエラー、再読み込みしてください。","home":False},status_code=502)
+    
+    recommended_videos = data[0]
+    videourls = data[1]
+    description = data[2]
+    videotitle = data[3]
+    authorid = data[4]
+    author = data[5]
+    authoricon = data[6]
+    highstream_url = data[7] # <-- ここで高画質URLを受け取る
+    
     response.set_cookie("yuki","True",max_age=60 * 60 * 24 * 7)
-    return template('video.html', {"request": request,"videoid":videoid,"videourls":t[1],"res":t[0],"description":t[2],"videotitle":t[3],"authorid":t[4],"authoricon":t[6],"author":t[5],"proxy":proxy})
+    
+    return template('video.html', {
+        "request": request,
+        "videoid": videoid,
+        "videourls": videourls,
+        "res": recommended_videos,
+        "description": description,
+        "videotitle": videotitle,
+        "authorid": authorid,
+        "authoricon": authoricon,
+        "author": author,
+        "proxy": proxy,
+        "highstream_url": highstream_url # <-- ここでテンプレートに渡す
+    })
 
 @app.get("/search", response_class=HTMLResponse)
 def search(q: str, response: Response, request: Request, page: Union[int, None] = 1, yuki: Union[str] = Cookie(None), proxy: Union[str] = Cookie(None)):
