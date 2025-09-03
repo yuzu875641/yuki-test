@@ -9,7 +9,7 @@ from cache import cache
 
 max_api_wait_time = 4
 max_time = 20
-apis = [r'https://lekker.gay/', r'https://nyc1.iv.ggtyler.dev/', r'https://invidious.nikkosphere.com/', r'https://invidious.rhyshl.live/', r'https://invid-api.poketube.fun/', r'https://inv.tux.pizza/', r'https://pol1.iv.ggtyler.dev/', r'https://yewtu.be/', r'https://youtube.alt.tyil.nl/']
+apis = [r'https://inv-server-woad.vercel.app/', r'https://lekker.gay/', r'https://nyc1.iv.ggtyler.dev/', r'https://invidious.nikkosphere.com/', r'https://invidious.rhyshl.live/', r'https://invid-api.poketube.fun/', r'https://inv.tux.pizza/', r'https://pol1.iv.ggtyler.dev/', r'https://yewtu.be/', r'https://youtube.alt.tyil.nl/']
 url = requests.get(r'https://raw.githubusercontent.com/mochidukiyukimi/yuki-youtube-instance/main/instance.txt').text.rstrip()
 version = "1.0"
 
