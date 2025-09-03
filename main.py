@@ -300,16 +300,16 @@ def video(v:str,response: Response,request: Request,yuki: Union[str] = Cookie(No
     # テンプレートに quality_list を渡す
     return template('video.html', {
         "request": request,
-        "videoid": videoid, # <-- videoidを取得します
-        "videourls": videourls,　# <-- videostreamを取得して埋め込んでます。360pしかないです
-        "res": recommended_videos, #　<-- 関連動画の情報
-        "description": description,　#　<-- 概要欄
-        "videotitle": videotitle,　# <-- 見て分かれ
-        "authorid": authorid,　# <-- チャンネルのid わかりにくいねそうに決まってる
-        "authoricon": authoricon, # <-- チャンネルのアイコンですURLで埋め込みしてます
-        "author": author,　#　<-- チャンネルの名前です。
+        "videoid": videoid,# <-- videoidを取得します
+        "videourls": videourls,# <-- videostreamを取得して埋め込んでます。360pしかないです
+        "res": recommended_videos,#　<-- 関連動画の情報
+        "description": description,#　<-- 概要欄
+        "videotitle": videotitle,# <-- 見て分かれ
+        "authorid": authorid,# <-- チャンネルのid わかりにくいねそうに決まってる
+        "authoricon": authoricon,# <-- チャンネルのアイコンですURLで埋め込みしてます
+        "author": author,#　<-- チャンネルの名前です。
         "proxy": proxy,
-        "quality_list": quality_list # <-- テンプレート変数として追加
+        "quality_list": quality_list# <-- テンプレート変数として追加
     })
 
 @app.get("/search", response_class=HTMLResponse)
