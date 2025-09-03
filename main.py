@@ -9,7 +9,7 @@ from cache import cache
 
 max_api_wait_time = 4
 max_time = 20
-apis = [r'https://nyc1.iv.ggtyler.dev/', r'https://invidious.nikkosphere.com/', r'https://invidious.rhyshl.live/', r'https://invid-api.poketube.fun/', r'https://inv.tux.pizza/', r'https://pol1.iv.ggtyler.dev/', r'https://yewtu.be/', r'https://youtube.alt.tyil.nl/']
+apis = [r'https://lekker.gay/', r'https://nyc1.iv.ggtyler.dev/', r'https://invidious.nikkosphere.com/', r'https://invidious.rhyshl.live/', r'https://invid-api.poketube.fun/', r'https://inv.tux.pizza/', r'https://pol1.iv.ggtyler.dev/', r'https://yewtu.be/', r'https://youtube.alt.tyil.nl/']
 url = requests.get(r'https://raw.githubusercontent.com/mochidukiyukimi/yuki-youtube-instance/main/instance.txt').text.rstrip()
 version = "1.0"
 
@@ -265,7 +265,7 @@ template = Jinja2Templates(directory='templates').TemplateResponse
 
 
 
-
+#　ホームですね
 @app.get("/", response_class=HTMLResponse)
 def home(response: Response,request: Request,yuki: Union[str] = Cookie(None)):
     if check_cokie(yuki):
@@ -273,7 +273,7 @@ def home(response: Response,request: Request,yuki: Union[str] = Cookie(None)):
         return template("home.html",{"request": request})
     print(check_cokie(yuki))
     return redirect("/word")
-
+#　動画情報の取得
 @app.get('/watch', response_class=HTMLResponse)
 def video(v:str,response: Response,request: Request,yuki: Union[str] = Cookie(None),proxy: Union[str] = Cookie(None)):
     if not(check_cokie(yuki)):
@@ -292,21 +292,22 @@ def video(v:str,response: Response,request: Request,yuki: Union[str] = Cookie(No
     authorid = data[4]
     author = data[5]
     authoricon = data[6]
-    quality_list = data[7] # <-- 画質リストを取得
+    quality_list = data[7] # <-- 画質リストを取得　難しいね
+
     
     response.set_cookie("yuki","True",max_age=60 * 60 * 24 * 7)
     
     # テンプレートに quality_list を渡す
     return template('video.html', {
         "request": request,
-        "videoid": videoid,
-        "videourls": videourls,
-        "res": recommended_videos,
-        "description": description,
-        "videotitle": videotitle,
-        "authorid": authorid,
-        "authoricon": authoricon,
-        "author": author,
+        "videoid": videoid, # <-- videoidを取得します
+        "videourls": videourls,　# <-- videostreamを取得して埋め込んでます。360pしかないです
+        "res": recommended_videos, #　<-- 関連動画の情報
+        "description": description,　#　<-- 概要欄
+        "videotitle": videotitle,　# <-- 見て分かれ
+        "authorid": authorid,　# <-- チャンネルのid わかりにくいねそうに決まってる
+        "authoricon": authoricon, # <-- チャンネルのアイコンですURLで埋め込みしてます
+        "author": author,　#　<-- チャンネルの名前です。
         "proxy": proxy,
         "quality_list": quality_list # <-- テンプレート変数として追加
     })
