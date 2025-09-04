@@ -146,28 +146,66 @@ def get_data(videoid):
         sorted_quality_list  # <-- 画質リストを渡す
     ]
 
-def get_search(q, page):
+def get_search(q, page, filter_type):
     errorlog = []
+    
+    # Invidious APIが直接サポートするタイプ
+    api_filter = None
+    if filter_type == 'playlist':
+        api_filter = 'playlist'
+    elif filter_type == 'channel':
+        api_filter = 'channel'
+    # 'live'と'short'はAPIでは直接指定できないので、ここでは指定しない
+    
+    # APIリクエストURLを構築
+    url_suffix = f"api/v1/search?q={urllib.parse.quote(q)}&page={page}&hl=jp"
+    if api_filter:
+        url_suffix += f"&type={api_filter}"
+
     try:
-        response = apirequest(fr"api/v1/search?q={urllib.parse.quote(q)}&page={page}&hl=jp")
+        response = apirequest(url_suffix)
         t = json.loads(response)
 
         results = []
         for item in t:
             try:
-                results.append(load_search(item))
+                processed_item = load_search(item)
+                
+                # ここでliveとshortのフィルタリングロジックを追加
+                if filter_type == 'live' and processed_item['type'] == 'video' and 'isLive' in item and item['isLive']:
+                    results.append(processed_item)
+                elif filter_type == 'short' and processed_item['type'] == 'video' and 'isShort' in item and item['isShort']:
+                    results.append(processed_item)
+                elif filter_type not in ['live', 'short']:
+                    # live, short以外のフィルタまたはフィルタなしの場合
+                    results.append(processed_item)
+                
             except ValueError as ve:
-                # エラー詳細をログに記録して、処理を続ける
                 errorlog.append(f"Error processing item: {str(ve)}")
-                continue  # エラーが発生した場合、そのアイテムをスキップ
-        return results
-
+                continue
+        
+        # 'all'の場合は全てのタイプが返されるため、追加のフィルタリングは不要
+        if filter_type == 'all':
+            return results
+        
+        # 'live'、'short'、'playlist'、'channel'の場合は、該当するタイプのみを返す
+        final_results = []
+        for item in results:
+            if filter_type == 'all' or (filter_type == 'live' and item['type'] == 'video' and 'isLive' in item and item['isLive']):
+                final_results.append(item)
+            elif filter_type == 'short' and item['type'] == 'video' and 'isShort' in item and item['isShort']:
+                final_results.append(item)
+            elif filter_type == item.get('type'):
+                final_results.append(item)
+        
+        return final_results
+        
     except json.JSONDecodeError:
         raise ValueError("Failed to decode JSON response.")
     except Exception as e:
         errorlog.append(f"API request error: {str(e)}")
         return {"error": "API request error."}
-
+        
 def load_search(i):
     if i["type"] == "video":
         return {
@@ -313,31 +351,34 @@ def video(v:str,response: Response,request: Request,yuki: Union[str] = Cookie(No
     })
 
 @app.get("/search", response_class=HTMLResponse)
-def search(q: str, response: Response, request: Request, page: Union[int, None] = 1, yuki: Union[str] = Cookie(None), proxy: Union[str] = Cookie(None)):
-    # クッキーの検証
+def search(q: str, response: Response, request: Request, page: Union[int, None] = 1, filter: Union[str, None] = 'all', yuki: Union[str] = Cookie(None), proxy: Union[str] = Cookie(None)):
     if not check_cokie(yuki):
         return redirect("/")
     response.set_cookie("yuki", "True", max_age=60 * 60 * 24 * 7)
 
     try:
-        results = get_search(q, page)
+        # 新しいget_search関数にフィルターを渡す
+        results = get_search(q, page, filter)
 
-        # resultsがdict型の場合の処理
         if isinstance(results, dict):
             error_detail = results.get("error", "Unknown error occurred.")
             raise HTTPException(status_code=500, detail=f"Search API error: {error_detail}")
-            return template("APIwait.html",{"request": request},status_code=500)
 
-        # 検索成功時のテンプレに結果を渡す
-        return template("search.html", {"request": request, "results": results, "word": q, "next": f"/search?q={q}&page={page + 1}", "proxy": proxy})
+        # テンプレートに渡すnextページのURLに、現在のフィルタを追加
+        next_page_url = f"/search?q={q}&page={page + 1}&filter={filter}"
 
+        return template("search.html", {
+            "request": request,
+            "results": results,
+            "word": q,
+            "next": next_page_url,
+            "proxy": proxy,
+            "current_filter": filter  # 現在選択されているフィルタをテンプレートに渡す
+        })
     except HTTPException as e:
-        # HTTP例外としてハンドリング
         raise e
     except Exception as e:
-        # 他の予期しない例外を処理
         raise HTTPException(status_code=500, detail=str(e))
-
 @app.get("/hashtag/{tag}")
 def search(tag:str,response: Response,request: Request,page:Union[int,None]=1,yuki: Union[str] = Cookie(None)):
     if not(check_cokie(yuki)):
