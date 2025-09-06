@@ -187,26 +187,31 @@
     </script>
 
     <script>
+        // Store the original player element
+        const originalPlayer = document.getElementById('player');
         const eduButton = document.getElementById('edu-button');
         const nocookieButton = document.getElementById('nocookie-button');
         const normalButton = document.getElementById('normal-button');
         const playerContainer = document.getElementById('player-container');
         const videoId = "{{ videoid }}";
-        const videoUrlList = {% for videourl in videourls%}"{{videourl}}",{% endfor %};
         
         function switchPlayer(url) {
-            const player = document.createElement('iframe');
-            player.src = url;
-            player.width = '100%';
-            player.height = '100%';
-            player.style.outline = 'none';
-            player.allowFullscreen = true;
-            player.setAttribute('frameborder', '0');
-            player.setAttribute('allow', 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture');
-            player.style.aspectRatio = '16 / 9';
+            // Create a new iframe element
+            const iframe = document.createElement('iframe');
+            iframe.src = url;
+            iframe.width = '100%';
+            iframe.height = '100%';
+            iframe.style.outline = 'none';
+            iframe.allowFullscreen = true;
+            iframe.setAttribute('frameborder', '0');
+            iframe.setAttribute('allow', 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture');
+            iframe.style.aspectRatio = '16 / 9';
             
+            // Replace the current content with the new iframe
             playerContainer.innerHTML = '';
-            playerContainer.appendChild(player);
+            playerContainer.appendChild(iframe);
+            
+            // Show the 'normal' button
             normalButton.classList.remove('hidden');
         }
 
@@ -225,33 +230,11 @@
 
         normalButton.addEventListener('click', function(event) {
             event.preventDefault();
-            const player = document.createElement('video');
-            player.style.outline = 'none';
-            player.style.width = '100%';
-            player.playsInline = true;
-            player.poster = `/thumbnail?v=${videoId}`;
-            player.id = 'player';
-            player.className = 'video-js w-full';
-            player.controls = true;
-            player.loop = document.getElementById("loop").checked;
-            
-            videoUrlList.forEach(url => {
-                const source = document.createElement('source');
-                source.src = url;
-                player.appendChild(source);
-            });
-            
+            // Restore the original video element
             playerContainer.innerHTML = '';
-            playerContainer.appendChild(player);
+            playerContainer.appendChild(originalPlayer);
+            // Hide the 'normal' button
             normalButton.classList.add('hidden');
-
-            document.getElementById("player").addEventListener('loadedmetadata', function() {
-                if (typeof getUrlQueries().t === "undefined") {
-                    this.currentTime = 0;
-                } else {
-                    this.currentTime = getUrlQueries().t;
-                }
-            });
         });
     </script>
 
@@ -278,4 +261,4 @@
     　　　　　    delay: 300
             });</script>
 </body>
-    </html>
+</html>
