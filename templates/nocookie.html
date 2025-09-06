@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <title>{{ videoInfo.title }}</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <style>
+        body {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+        }
+        .ui-autocomplete {
+            background-color: #2D3748;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            color: #E2E8F0;
+        }
+        .ui-menu .ui-menu-item {
+            font-size: 1rem;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .ui-menu .ui-menu-item:hover, .ui-menu .ui-menu-item-active {
+            background-color: #4A5568;
+        }
+        .comment-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 9999px;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 min-h-screen flex flex-col items-center p-4 md:p-8">
+
+    <div class="w-full max-w-7xl mx-auto space-y-8">
+        <header class="p-6 md:p-8 bg-gray-800 rounded-3xl shadow-2xl flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div class="text-center md:text-left">
+                <h1 class="text-4xl sm:text-5xl font-bold text-blue-400"><a href="/" class="hover:text-blue-300 transition-colors duration-200">Yuki Youtube</a></h1>
+                <p class="text-sm text-gray-400">ゆず改造インスタンス</p>
+            </div>
+            <div class="w-full md:w-1/2 flex items-center justify-end space-x-4">
+                <a href="/requestform" class="text-sm md:text-base text-gray-400 hover:text-blue-400 transition-colors duration-200 whitespace-nowrap">新機能の要望やバグ報告</a>
+                <a href="/bbs" class="text-sm md:text-base text-gray-400 hover:text-blue-400 transition-colors duration-200 whitespace-nowrap">掲示板</a>
+                <form id="searchForm" class="w-full relative" action="/search" method="get">
+                    <input type="search" id="searchbox" autocomplete="on" autocorrect="on" autocapitalize="none" spellcheck="false" name="q" placeholder="検索" title="検索" value="" class="w-full py-2 px-4 rounded-full bg-gray-700 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300">
+                    <button type="submit" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 space-y-6">
+                <div id="player-container" class="bg-black rounded-xl overflow-hidden shadow-lg">
+                    <iframe width="100%" height="auto" src="{{ videosrc }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                </div>
+                
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg space-y-4">
+                    <h1 class="text-xl sm:text-2xl font-bold">{{ videoInfo.title }}</h1>
+                    <a href="/channel/{{ videoInfo.channelId }}" class="flex items-center space-x-4 group">
+                        <img class="w-12 h-12 rounded-full ring-2 ring-blue-400 group-hover:ring-blue-500 transition-colors" src="{{ videoInfo.channelIcon }}" alt="{{ videoInfo.channelName }}のチャンネルアイコン">
+                        <span id="channel-name" class="text-gray-200 text-base font-semibold">{{ videoInfo.channelName }}</span>
+                    </a>
+                    
+                    <div id="description-box" class="mt-4">
+                        <p id="descriptionWrapper" class="text-sm text-gray-400 leading-relaxed">{{ videoInfo.description }}</p>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+                        <div class="flex space-x-4 text-blue-400 text-sm md:text-base">
+                            <a href="{{ videosrc }}" target="_blank" class="hover:underline">ダウンロード</a>
+                            <a href="javascript:{navigator.share({title: '動画を共有',text: '{{ videoInfo.title }}',url: location.href,})}" class="hover:underline">動画を共有</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-1 space-y-4">
+                </div>
+        </div>
+    </div>
+    
+</body>
+</html>
