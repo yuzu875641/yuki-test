@@ -83,6 +83,7 @@
                             <a href="javascript:{navigator.share({title: '動画を共有',text: '{{videotitle}}',url: location.href,})}" class="hover:underline">動画を共有</a>
                             <a id="edu-button" href="#" class="hover:underline">eduで視聴</a>
                             <a id="nocookie-button" href="#" class="hover:underline">nocookieで視聴</a>
+                            <a id="hls-button" href="#" class="hover:underline">HLSで視聴</a>
                             <a id="normal-button" href="#" class="hover:underline hidden">通常の動画に戻す</a>
                             
                             <div class="relative inline-block text-left">
@@ -92,7 +93,6 @@
                                     {% endfor %}
                                 </select>
                             </div>
-
                         </div>
                         <div class="flex items-center space-x-4 text-sm text-gray-400">
                             <label class="flex items-center space-x-2 cursor-pointer">
@@ -186,58 +186,121 @@
         }
     </script>
 
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script>
-        // Store the original player element
+        // サーバーリストを管理
+        const servers = {
+            'server1': { name: 'Server1', url: 'https://inv-server-w268.vercel.app' },
+            'server2': { name: 'Server2', url: 'https://inv-server-x88u.vercel.app' },
+            'server3': { name: 'Server3', url: 'https://inv-server-odic.vercel.app' },
+            'server4': { name: 'Server4', url: 'https://inv-server-8ode.vercel.app' },
+            'server5': { name: 'Server5', url: 'https://inv-server-sfjw.vercel.app' },
+            'server6': { name: 'Server6', url: 'https://inv-server-u8ps.vercel.app' },
+            'server7': { name: 'Server7', url: 'https://inv-server-qudk.vercel.app' },
+            'server8': { name: 'Server8', url: 'https://inv-server-2j8x.vercel.app' },
+            'server9': { name: 'Server9', url: 'https://inv-server-woad.vercel.app' }
+        };
+
+        // UI要素を取得
         const originalPlayer = document.getElementById('player');
         const eduButton = document.getElementById('edu-button');
         const nocookieButton = document.getElementById('nocookie-button');
+        const hlsButton = document.getElementById('hls-button');
         const normalButton = document.getElementById('normal-button');
         const playerContainer = document.getElementById('player-container');
         const videoId = "{{ videoid }}";
-        
-        function switchPlayer(url) {
-            // Create a new iframe element
-            const iframe = document.createElement('iframe');
-            iframe.src = url;
-            iframe.width = '100%';
-            iframe.height = '100%';
-            iframe.style.outline = 'none';
-            iframe.allowFullscreen = true;
-            iframe.setAttribute('frameborder', '0');
-            iframe.setAttribute('allow', 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture');
-            iframe.style.aspectRatio = '16 / 9';
-            
-            // Replace the current content with the new iframe
+
+        // サーバー選択のドロップダウンを生成し、HLSボタンの隣に追加
+        const serverSelector = document.createElement('select');
+        serverSelector.id = 'hls-server-selector';
+        serverSelector.className = 'bg-gray-700 text-white py-1 px-2 rounded-md appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500';
+        for (const [key, serverInfo] of Object.entries(servers)) {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = serverInfo.name;
+            serverSelector.appendChild(option);
+        }
+        hlsButton.parentNode.insertBefore(serverSelector, hlsButton.nextSibling);
+
+        function switchPlayer(playerType, url = null) {
             playerContainer.innerHTML = '';
-            playerContainer.appendChild(iframe);
             
-            // Show the 'normal' button
+            if (playerType === 'iframe') {
+                const iframe = document.createElement('iframe');
+                iframe.src = url;
+                iframe.width = '100%';
+                iframe.height = '100%';
+                iframe.style.outline = 'none';
+                iframe.allowFullscreen = true;
+                iframe.setAttribute('frameborder', '0');
+                iframe.setAttribute('allow', 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture');
+                iframe.style.aspectRatio = '16 / 9';
+                playerContainer.appendChild(iframe);
+            } else if (playerType === 'hls') {
+                const videoPlayer = document.createElement('video');
+                videoPlayer.id = 'player';
+                videoPlayer.style.outline = 'none';
+                videoPlayer.style.width = '100%';
+                videoPlayer.playsinline = true;
+                videoPlayer.controls = true;
+                playerContainer.appendChild(videoPlayer);
+
+                if (Hls.isSupported()) {
+                    const hls = new Hls();
+                    hls.loadSource(url);
+                    hls.attachMedia(videoPlayer);
+                    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                        videoPlayer.play();
+                    });
+                } else {
+                    videoPlayer.src = url;
+                    videoPlayer.addEventListener('loadedmetadata', () => {
+                        videoPlayer.play();
+                    });
+                }
+            }
+
             normalButton.classList.remove('hidden');
         }
 
         eduButton.addEventListener('click', function(event) {
             event.preventDefault();
-            const eduParams = '?autoplay=1&amp;mute=0&amp;controls=1&amp;start=0&amp;origin=https%3A//create.kahoot.it&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;iv_load_policy=3&amp;modestbranding=1&amp;fs=1&amp;embed_config=%7B%22enc%22%3A%22AXH1ezlDMqRg2sliE-6U84LMtrXE06quNAQW8whxjmPJyEbHIYM8iJqZyL4C1dmz65fkyGT8_CAOBPxZn1TPFdfiT_MxeBVG2kj3MBZvRPd7jtEvqyDT0ozH4dAJtJE286DsFe8aJR6nRjlvfLHzxjka-T7JKf3dXQ%3D%3D%22%2C%22hideTitle%22%3Atrue%7D&amp;enablejsapi=1&amp;widgetid=1';
+            const eduParams = '?autoplay=1&mute=0&controls=1&start=0&origin=' + encodeURIComponent(window.location.origin) + '&playsinline=1&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&fs=1&enablejsapi=1&widgetid=1';
             const eduUrl = `https://www.youtubeeducation.com/embed/${videoId}${eduParams}`;
-            switchPlayer(eduUrl);
+            switchPlayer('iframe', eduUrl);
         });
 
         nocookieButton.addEventListener('click', function(event) {
             event.preventDefault();
             const nocookieUrl = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0`;
-            switchPlayer(nocookieUrl);
+            switchPlayer('iframe', nocookieUrl);
+        });
+        
+        hlsButton.addEventListener('click', async function(event) {
+            event.preventDefault();
+            const selectedServerKey = serverSelector.value;
+            const selectedServerUrl = servers[selectedServerKey].url; // URLを取得するように変更
+
+            try {
+                const response = await fetch(`${selectedServerUrl}/live/${videoId}`);
+                const data = await response.json();
+                const hlsUrl = data.hlsUrl;
+                switchPlayer('hls', hlsUrl);
+            } catch (error) {
+                console.error('HLS動画の取得に失敗しました:', error);
+                alert('HLS動画の読み込みに失敗しました。サーバーまたは動画IDを確認してください。');
+            }
         });
 
         normalButton.addEventListener('click', function(event) {
             event.preventDefault();
-            // Restore the original video element
             playerContainer.innerHTML = '';
-            playerContainer.appendChild(originalPlayer);
-            // Hide the 'normal' button
+            const newPlayer = originalPlayer.cloneNode(true);
+            playerContainer.appendChild(newPlayer);
             normalButton.classList.add('hidden');
         });
     </script>
-
+    
     <script>$('#searchbox').autocomplete({
                 source: function (request, response) {
                     {
@@ -252,14 +315,11 @@
                 },
     　　　　　    select: function(event, ui) {
                         // 候補が選択されたときの処理
-                        // テキストボックスに選択したアイテムをセット
                         $("#searchbox").val(ui.item.value);
-                        // フォームを送信
-                        $("#searchForm").submit(); // フォームを送信
-                        return false; // jQuery UIのデフォルトの動作をキャンセル
+                        $("#searchForm").submit();
+                        return false;
                 },
     　　　　　    delay: 300
             });</script>
 </body>
 </html>
-
