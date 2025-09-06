@@ -78,17 +78,27 @@
 
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
                         <div class="flex space-x-4 text-blue-400 text-sm md:text-base">
-                            <a href="{{ videosrc }}" target="_blank" class="hover:underline">ダウンロード</a>
-                            <a href="javascript:{navigator.share({title: '動画を共有',text: '{{ videoInfo.title }}',url: location.href,})}" class="hover:underline">動画を共有</a>
+                            <a href="https://www.youtube.com/watch?v={{ videoid }}" target="_blank" class="hover:underline">YouTubeで見る</a>
+                            <a href="javascript:{navigator.share({title: '{{ videoInfo.title }}',text: '{{ videoInfo.title }}',url: location.href,})}" class="hover:underline">動画を共有</a>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="lg:col-span-1 space-y-4">
-                </div>
+                {% if recommendedVideos %}
+                    <h2 class="text-2xl font-bold text-gray-200">関連動画</h2>
+                    <div class="grid gap-4">
+                        {% for video in recommendedVideos %}
+                        <a href="/watch?v={{ video.id }}" class="block p-4 bg-gray-800 rounded-xl shadow-lg hover:bg-gray-700 transition-colors duration-200">
+                            <h3 class="text-lg font-semibold text-gray-100">{{ video.title }}</h3>
+                            <p class="text-sm text-gray-400 mt-1">{{ video.author }}</p>
+                        </a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </div>
-    
 </body>
 </html>
