@@ -81,7 +81,9 @@
                             <a href="{{ videourls[0] }}" target="_blank" class="hover:underline">ダウンロード</a>
                             <a href="javascript:{navigator.share({title: '動画を共有',text: '{{videotitle}}',url: location.protocol+'//'+document.domain+'/watch?v={{ videoid }}'+'&t='+Math.floor(document.getElementById('player').currentTime),})}" class="hover:underline">現時点の動画を共有</a>
                             <a href="javascript:{navigator.share({title: '動画を共有',text: '{{videotitle}}',url: location.href,})}" class="hover:underline">動画を共有</a>
-                            <a href="/edu/{{ videoid }}" target="_blank" class="hover:underline">EDUで視聴</a>
+                            <a id="edu-button" href="#" class="hover:underline">eduで視聴</a>
+                            <a id="nocookie-button" href="#" class="hover:underline">nocookieで視聴</a>
+                            <a id="normal-button" href="#" class="hover:underline hidden">通常の動画に戻す</a>
                             
                             <div class="relative inline-block text-left">
                                 <select id="quality-selector" class="bg-gray-700 text-white py-1 px-2 rounded-md appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -184,6 +186,75 @@
         }
     </script>
 
+    <script>
+        const eduButton = document.getElementById('edu-button');
+        const nocookieButton = document.getElementById('nocookie-button');
+        const normalButton = document.getElementById('normal-button');
+        const playerContainer = document.getElementById('player-container');
+        const videoId = "{{ videoid }}";
+        const videoUrlList = {% for videourl in videourls%}"{{videourl}}",{% endfor %};
+        
+        function switchPlayer(url) {
+            const player = document.createElement('iframe');
+            player.src = url;
+            player.width = '100%';
+            player.height = '100%';
+            player.style.outline = 'none';
+            player.allowFullscreen = true;
+            player.setAttribute('frameborder', '0');
+            player.setAttribute('allow', 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture');
+            player.style.aspectRatio = '16 / 9';
+            
+            playerContainer.innerHTML = '';
+            playerContainer.appendChild(player);
+            normalButton.classList.remove('hidden');
+        }
+
+        eduButton.addEventListener('click', function(event) {
+            event.preventDefault();
+            const eduParams = '?autoplay=0&mute=0&controls=1&start=0&playsinline=1&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&fs=1&enablejsapi=1&aoriginsup=1';
+            const eduUrl = `https://www.youtubeeducation.com/embed/${videoId}${eduParams}`;
+            switchPlayer(eduUrl);
+        });
+
+        nocookieButton.addEventListener('click', function(event) {
+            event.preventDefault();
+            const nocookieUrl = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0`;
+            switchPlayer(nocookieUrl);
+        });
+
+        normalButton.addEventListener('click', function(event) {
+            event.preventDefault();
+            const player = document.createElement('video');
+            player.style.outline = 'none';
+            player.style.width = '100%';
+            player.playsInline = true;
+            player.poster = `/thumbnail?v=${videoId}`;
+            player.id = 'player';
+            player.className = 'video-js w-full';
+            player.controls = true;
+            player.loop = document.getElementById("loop").checked;
+            
+            videoUrlList.forEach(url => {
+                const source = document.createElement('source');
+                source.src = url;
+                player.appendChild(source);
+            });
+            
+            playerContainer.innerHTML = '';
+            playerContainer.appendChild(player);
+            normalButton.classList.add('hidden');
+
+            document.getElementById("player").addEventListener('loadedmetadata', function() {
+                if (typeof getUrlQueries().t === "undefined") {
+                    this.currentTime = 0;
+                } else {
+                    this.currentTime = getUrlQueries().t;
+                }
+            });
+        });
+    </script>
+
     <script>$('#searchbox').autocomplete({
                 source: function (request, response) {
                     {
@@ -207,4 +278,4 @@
     　　　　　    delay: 300
             });</script>
 </body>
-</html>
+    </html>
