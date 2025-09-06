@@ -85,15 +85,6 @@
                             <a id="nocookie-button" href="#" class="hover:underline">nocookieで視聴</a>
                             <a id="hls-button" href="#" class="hover:underline">HLSで視聴</a>
                             <a id="normal-button" href="#" class="hover:underline hidden">通常の動画に戻す</a>
-                            
-                            <div class="relative inline-block text-left">
-                                <select id="quality-selector" class="bg-gray-700 text-white py-1 px-2 rounded-md appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                    {% for q in quality_list %}
-                                        <option value="{{ q.url }}">{{ q.quality }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
                         <div class="flex items-center space-x-4 text-sm text-gray-400">
                             <label class="flex items-center space-x-2 cursor-pointer">
                                 <input type="checkbox" id="loop" onchange="changeloop()" class="form-checkbox h-4 w-4 text-blue-600 rounded">
@@ -323,3 +314,4 @@
             });</script>
 </body>
 </html>
+
