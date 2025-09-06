@@ -290,6 +290,70 @@ def video(v: str, response: Response, request: Request, yuki: Union[str, None] =
         "quality_list": quality_list
     })
 
+# main.py の既存のコードに以下のエンドポイントを追加します
+
+@app.get('/edu', response_class=HTMLResponse)
+def edu_page(v: str, response: Response, request: Request, yuki: Union[str, None] = Cookie(None)):
+    if not check_cokie(yuki):
+        return redirect("/")
+    response.set_cookie(key="yuki", value="True", max_age=7 * 24 * 60 * 60)
+    videoid = v
+    try:
+        data = get_data(videoid)
+        comments = get_comments(videoid)
+    except APItimeoutError as e:
+        return template("error.html", {"request": request, "status_code": "502 - Bad Gateway", "message": "APIエラー: 再読み込みしてください。", "home": False}, status_code=502)
+
+    recommended_videos, _, description, videotitle, authorid, author, authoricon, quality_list = data
+    
+    video_src = f"https://www.youtubeeducation.com/embed/{videoid}?autoplay=0&amp;mute=0&amp;controls=1&amp;start=0&amp;origin=https%3A%2F%2Fcreate.kahoot.it&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;iv_load_policy=3&amp;modestbranding=1&amp;fs=1&amp;embed_config=%7B%22enc%22%3A%22AXH1ezlOjk7uPL54v707Eu6ElkRzL15Jh-Gf0uru6jRzXmddU0uVPO6Q-pb0QyEd8YIer6BYFO-ZqYXPeXnbyBqX3hsHrmDSkGrmgmv-MxIiV6bO-fuGKTBfuL7BEniN-oDUAvQNcxFfNvJfxlC7NWHeo4ffwiZIJg%3D%3D%22%2C%22hideTitle%22%3Atrue%7D&amp;enablejsapi=1&amp;widgetid=1&amp;forigin=https%3A%2F%2Fcreate.kahoot.it%2Fstory%2Fcreate%2F4570ae24-1cc0-44aa-a790-eb46bcc71292%3Fcourseid%3Dempty&amp;aoriginsup=1&amp;gporigin=https%3A%2F%2Fcreate.kahoot.it%2Fauth%2Flogin%3Fnext%3D%252Fstory%252Fcreate%252F4570ae24-1cc0-44aa-a790-eb46bcc71292%253Fcourseid%253Dempty&amp;vf=6"
+    
+    return template('edu.html', {
+        "request": request,
+        "videosrc": video_src,
+        "videoInfo": {
+            "title": videotitle,
+            "channelId": authorid,
+            "channelName": author,
+            "channelIcon": authoricon,
+            "description": description
+        },
+        "recommendedVideos": recommended_videos,
+        "comments": comments,
+        "quality_list": quality_list
+    })
+
+@app.get('/nocookie', response_class=HTMLResponse)
+def nocookie_page(v: str, response: Response, request: Request, yuki: Union[str, None] = Cookie(None)):
+    if not check_cokie(yuki):
+        return redirect("/")
+    response.set_cookie(key="yuki", value="True", max_age=7 * 24 * 60 * 60)
+    videoid = v
+    try:
+        data = get_data(videoid)
+        comments = get_comments(videoid)
+    except APItimeoutError as e:
+        return template("error.html", {"request": request, "status_code": "502 - Bad Gateway", "message": "APIエラー: 再読み込みしてください。", "home": False}, status_code=502)
+        
+    recommended_videos, _, description, videotitle, authorid, author, authoricon, quality_list = data
+
+    video_src = f"https://www.youtube-nocookie.com/embed/{videoid}"
+
+    return template('nocookie.html', {
+        "request": request,
+        "videosrc": video_src,
+        "videoInfo": {
+            "title": videotitle,
+            "channelId": authorid,
+            "channelName": author,
+            "channelIcon": authoricon,
+            "description": description
+        },
+        "recommendedVideos": recommended_videos,
+        "comments": comments,
+        "quality_list": quality_list
+    })
+
 @app.get("/search", response_class=HTMLResponse)
 def search(q: str, response: Response, request: Request, page: Union[int, None] = 1, filter: Union[str, None] = 'all', yuki: Union[str, None] = Cookie(None), proxy: Union[str, None] = Cookie(None)):
     if not check_cokie(yuki):
