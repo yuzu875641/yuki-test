@@ -100,9 +100,15 @@ def get_info(request):
 def get_data(videoid):
     t = json.loads(apirequest(r"api/v1/videos/"+ urllib.parse.quote(videoid)))
     
-    # 画質リストを生成するロジック
     quality_list = []
     
+    # ライブ動画の場合、hlsUrlをquality_listに追加する
+    if t.get("type") == "live" and "hlsUrl" in t.get("urls", {}):
+        quality_list.append({
+            "quality": "HLS Live",
+            "url": t["urls"]["hlsUrl"]
+        })
+
     # formatStreams（動画と音声が統合されているストリーム）から品質を取得
     if "formatStreams" in t:
         for stream in t["formatStreams"]:
@@ -115,7 +121,6 @@ def get_data(videoid):
     # adaptiveFormats（動画と音声が別々のストリーム）から動画のみの品質を取得
     if "adaptiveFormats" in t:
         for stream in t["adaptiveFormats"]:
-            # MIMEタイプが 'video' で、品質ラベルがあるストリームを追加
             if stream.get("mimeType", "").startswith("video") and stream.get("qualityLabel"):
                 quality_list.append({
                     "quality": stream.get("qualityLabel"),
@@ -127,7 +132,7 @@ def get_data(videoid):
 
     # 品質を数値でソート
     def sort_key(item):
-        quality = item['quality'].replace('p', '').replace('+', '')
+        quality = item['quality'].replace('p', '').replace('+', '').replace('HLS Live', '9999')
         return int(quality) if quality.isdigit() else 0
 
     sorted_quality_list = sorted(list(unique_qualities), key=sort_key, reverse=True)
@@ -143,9 +148,9 @@ def get_data(videoid):
         t["authorId"],
         t["author"],
         t["authorThumbnails"][-1]["url"],
-        sorted_quality_list  # <-- 画質リストを渡す
+        sorted_quality_list
     ]
-
+    
 def get_search(q, page, filter_type):
     errorlog = []
     
