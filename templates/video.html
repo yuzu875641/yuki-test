@@ -81,6 +81,7 @@
                             <a href="{{ videourls[0] }}" target="_blank" class="hover:underline">ダウンロード</a>
                             <a href="javascript:{navigator.share({title: '動画を共有',text: '{{videotitle}}',url: location.protocol+'//'+document.domain+'/watch?v={{ videoid }}'+'&t='+Math.floor(document.getElementById('player').currentTime),})}" class="hover:underline">現時点の動画を共有</a>
                             <a href="javascript:{navigator.share({title: '動画を共有',text: '{{videotitle}}',url: location.href,})}" class="hover:underline">動画を共有</a>
+                            <a href="/edu/{{ videoid }}" target="_blank" class="hover:underline">EDUで視聴</a>
                             
                             <div class="relative inline-block text-left">
                                 <select id="quality-selector" class="bg-gray-700 text-white py-1 px-2 rounded-md appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -206,5 +207,4 @@
     　　　　　    delay: 300
             });</script>
 </body>
-    </html>
-
+</html>
