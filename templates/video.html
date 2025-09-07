@@ -237,7 +237,7 @@
 
         eduButton.addEventListener('click', function(event) {
             event.preventDefault();
-            const eduParams = '?autoplay=1&amp;mute=0&amp;controls=1&amp;start=0&amp;origin=https%3A//create.kahoot.it&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;iv_load_policy=3&amp;modestbranding=1&amp;fs=1&amp;embed_config=%7B%22enc%22%3A%22AXH1ezlDMqRg2sliE-6U84LMtrXE06quNAQW8whxjmPJyEbHIYM8iJqZyL4C1dmz65fkyGT8_CAOBPxZn1TPFdfiT_MxeBVG2kj3MBZvRPd7jtEvqyDT0ozH4dAJtJE286DsFe8aJR6nRjlvfLHzxjka-T7JKf3dXQ%3D%3D%22%2C%22hideTitle%22%3Atrue%7D&amp;enablejsapi=1&amp;widgetid=1';
+            const eduParams = '?autoplay=0&amp;mute=0&amp;controls=1&amp;start=0&amp;origin=https%3A%2F%2Fcreate.kahoot.it&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;iv_load_policy=3&amp;modestbranding=1&amp;fs=1&amp;embed_config=%7B%22enc%22%3A%22AXH1ezlOjk7uPL54v707Eu6ElkRzL15Jh-Gf0uru6jRzXmddU0uVPO6Q-pb0QyEd8YIer6BYFO-ZqYXPeXnbyBqX3hsHrmDSkGrmgmv-MxIiV6bO-fuGKTBfuL7BEniN-oDUAvQNcxFfNvJfxlC7NWHeo4ffwiZIJg%3D%3D%22%2C%22hideTitle%22%3Atrue%7D&amp;enablejsapi=1&amp;widgetid=1&amp;forigin=https%3A%2F%2Fcreate.kahoot.it%2Fstory%2Fcreate%2F4570ae24-1cc0-44aa-a790-eb46bcc71292%3Fcourseid%3Dempty&amp;aoriginsup=1&amp;gporigin=https%3A%2F%2Fcreate.kahoot.it%2Fauth%2Flogin%3Fnext%3D%252Fstory%252Fcreate%252F4570ae24-1cc0-44aa-a790-eb46bcc71292%253Fcourseid%253Dempty&amp;vf=6';
             const eduUrl = `https://www.youtubeeducation.com/embed/${videoId}${eduParams}`;
             switchPlayer('iframe', eduUrl);
         });
@@ -303,4 +303,5 @@
             });</script>
 </body>
 </html>
+
 
