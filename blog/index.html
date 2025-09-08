@@ -1,92 +1,257 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset='utf-8'>
-    <title>しぐれうい</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>デバイスの傾きと時計</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
     <style>
-      body {
-        margin: 0;
-        padding: 20px;
-        background-color: #f0f0f0;
-        font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
-      }
-      .container {
-        max-width: 800px;
-        margin: 0 auto;
-        background-color: #fff;
-        padding-bottom: 20px;
-      }
-      .video-container {
-        position: relative;
-        width: 100%;
-        padding-bottom: 56.25%; /* 16:9のアスペクト比 */
-        height: 0;
-        overflow: hidden;
-      }
-      .video-container iframe {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-      }
-      .video-title {
-        padding: 15px;
-        font-size: 1.2em;
-        font-weight: bold;
-        color: #030303;
-      }
-      .info-bar {
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        padding: 10px 0;
-        border-bottom: 1px solid #ddd;
-      }
-      .info-item {
-        text-align: center;
-        color: #606060;
-      }
-      .info-item .value {
-        font-weight: bold;
-        font-size: 1.1em;
-        color: #030303;
-      }
-      .description-box {
-        padding: 15px;
-        line-height: 1.6;
-        color: #030303;
-        white-space: pre-wrap;
-      }
-      .description-box a {
-        color: #065fd4;
-        text-decoration: none;
-      }
-      .description-box a:hover {
-        text-decoration: underline;
-      }
-      #comments-section {
-        padding: 15px;
-      }
-      .comment-item {
-        border-bottom: 1px solid #eee;
-        padding: 10px 0;
-      }
-      .comment-author {
-        font-weight: bold;
-        color: #030303;
-      }
-      .comment-content {
-        color: #606060;
-      }
+        :root {
+            --bg-color: #1a1a2e;
+            --text-color: #e0e0e0;
+            --accent-color: #00bcd4;
+            --container-bg: rgba(45, 50, 80, 0.5);
+            --gradient-start: #3f87a6;
+            --gradient-end: #ebf1f6;
+            --input-bg: #2d3250;
+            --button-bg: #4b8b98;
+            --button-hover: #5ac7d7;
+            --border-color: #3f4258;
+            --clock-face-bg: #e0e0e0;
+            --clock-face-border: #3f4258;
+            --hour-hand: #555;
+            --minute-hand: #777;
+            --second-hand: #e74c3c;
+        }
+
+        body {
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .container {
+            background: var(--container-bg);
+            backdrop-filter: blur(10px);
+            padding: 3em;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 90%;
+            width: 500px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.2em;
+            margin-bottom: 0.5em;
+        }
+
+        p {
+            font-size: 1.1em;
+            margin: 0.5em 0;
+        }
+
+        .section-divider {
+            border: 0;
+            height: 1px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), var(--border-color), rgba(0, 0, 0, 0));
+            margin: 2em 0;
+        }
+
+        #orientation-status {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 1em;
+        }
+        
+        /* 認証入力欄のスタイル */
+        .input-group {
+            margin-top: 2em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #word {
+            width: 150px;
+            padding: 12px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            text-align: center;
+            font-size: 1em;
+        }
+
+        #word:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.2);
+        }
+
+        .action-button {
+            padding: 12px 25px;
+            background-color: var(--button-bg);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s, transform 0.2s;
+            letter-spacing: 1px;
+        }
+
+        .action-button:hover {
+            background-color: var(--button-hover);
+            transform: translateY(-2px);
+        }
+
+        .action-button:active {
+            transform: translateY(0);
+        }
+
+        /* アナログ時計のスタイル */
+        .clock-container {
+            margin-top: 2em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #clock-face {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            background: var(--clock-face-bg);
+            border-radius: 50%;
+            border: 10px solid var(--clock-face-border);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        #hour, #minute, #second {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            background: var(--hour-hand);
+            transform-origin: bottom center;
+            border-radius: 5px;
+        }
+
+        #hour {
+            width: 6px;
+            height: 50px;
+            background: var(--hour-hand);
+        }
+
+        #minute {
+            width: 4px;
+            height: 70px;
+            background: var(--minute-hand);
+        }
+
+        #second {
+            width: 2px;
+            height: 85px;
+            background: var(--second-hand);
+            /* 滑らかな動きを実現 */
+            transition: transform 0.1s cubic-bezier(0.1, 2.7, 0.58, 1);
+        }
     </style>
 </head>
 <body>
-    <p>とりあえず漁ってきたのを改造したやつ</p>
-    <input id="word" type="text" /><input type="button" value="確認" onClick="getlevel()" />
-    <div id="info"></div>
+
+    <div class="container">
+        <h1>デバイスの傾き</h1>
+        <p>アルファ: <span id="alpha"></span></p>
+        <p>ベータ: <span id="beta"></span></p>
+        <p>ガンマ: <span id="gamma"></span></p>
+        <p id="orientation-status"></p>
+        
+        <hr class="section-divider">
+
+        <h1>アナログ時計</h1>
+        <div class="clock-container">
+            <div id="clock-face">
+                <div id="hour"></div>
+                <div id="minute"></div>
+                <div id="second"></div>
+            </div>
+        </div>
+        
+        <hr class="section-divider">
+        
+        <div class="input-group">
+            <input id="word" type="text" placeholder="キーワードを入力" />
+            <input type="button" value="確認" class="action-button" onClick="getlevel()" />
+        </div>
+        <div id="info"></div>
+    </div>
 
     <script>
+        // デバイスの傾き
+        function handleOrientation(event) {
+            const alpha = event.alpha;
+            const beta = event.beta;
+            const gamma = event.gamma;
+
+            document.getElementById('alpha').textContent = alpha ? `${alpha.toFixed(2)}°` : 'N/A';
+            document.getElementById('beta').textContent = beta ? `${beta.toFixed(2)}°` : 'N/A';
+            document.getElementById('gamma').textContent = gamma ? `${gamma.toFixed(2)}°` : 'N/A';
+        }
+
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener('deviceorientation', handleOrientation);
+            document.getElementById('orientation-status').textContent = 'デバイスの傾き情報を取得中...';
+        } else {
+            document.getElementById('orientation-status').textContent = 'お使いのデバイスは傾き情報をサポートしていません。';
+        }
+
+        // ぬるぬる時計
+        function updateClock() {
+            const now = new Date();
+            const seconds = now.getSeconds();
+            const minutes = now.getMinutes();
+            const hours = now.getHours();
+
+            const secondHand = document.getElementById('second');
+            const minuteHand = document.getElementById('minute');
+            const hourHand = document.getElementById('hour');
+
+            // 角度を計算
+            const secondDeg = (seconds * 6);
+            const minuteDeg = (minutes * 6) + (seconds * 0.1);
+            const hourDeg = (hours % 12) * 30 + (minutes * 0.5);
+
+            // 針を回転させる
+            secondHand.style.transform = `rotate(${secondDeg}deg)`;
+            minuteHand.style.transform = `rotate(${minuteDeg}deg)`;
+            hourHand.style.transform = `rotate(${hourDeg}deg)`;
+        }
+
+        // 500msごとに時計を更新して滑らかさを向上
+        setInterval(updateClock, 500);
+
+        // ページ読み込み時に一度実行
+        updateClock();
+
+        // 認証機能
         function getlevel() {
             if (document.getElementById('word').value === "0530") {
                 document.cookie = "yuki=True; path=/;";
@@ -95,107 +260,7 @@
                 // ここでは何もしない
             }
         }
-        
-        function displayVideoAndComments() {
-            const infoDiv = document.getElementById('info');
-            infoDiv.innerHTML = `
-                <div class="container">
-                    <div class="video-container">
-                        <iframe src="https://www.youtube-nocookie.com/embed/e-qWitCw9dU" title="チェリーポップ /covered by しぐれうい" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-                    </div>
-
-                    <div class="video-title">
-                        チェリーポップ /covered by しぐれうい
-                    </div>
-
-                    <div class="info-bar">
-                        <div class="info-item">
-                            <div class="value" id="likes-count"></div>
-                            <div>高評価数</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="value" id="views-count"></div>
-                            <div>視聴回数</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="value" id="published-date"></div>
-                            <div>公開日</div>
-                        </div>
-                    </div>
-
-                    <div class="description-box">
-🍒チェリーポップ
-原曲：   DECO*27 - チェリーポップ feat. 初音ミク  
-Lyrics & Music: DECO*27
-Arrangement: DECO*27 & Hayato Yamamoto
-© OTOIRO / DECO27
-
-Mix: 宮沢竣介
-カバー映像：ご本家の映像素材をお借りしています！
-（お手伝いいただいた方：神稲たーむ）
-イラスト&歌：しぐれうい
-                    </div>
-
-                    <div id="comments-section">
-                        <h3>コメント</h3>
-                        <p>コメントを読み込み中...</p>
-                    </div>
-                </div>
-            `;
-            
-            // API呼び出しの実行
-            const videoId = 'e-qWitCw9dU';
-            const invidiousUrl = 'https://invidious.nikkosphere.com';
-
-            Promise.all([
-                fetch(`${invidiousUrl}/api/v1/videos/${videoId}`),
-                fetch(`${invidiousUrl}/api/v1/comments/${videoId}`)
-            ])
-            .then(responses => {
-                return Promise.all(responses.map(response => {
-                    if (!response.ok) {
-                        throw new Error('データの取得に失敗しました。');
-                    }
-                    return response.json();
-                }));
-            })
-            .then(data => {
-                const videoData = data[0];
-                const commentsData = data[1];
-
-                // 動画情報の表示
-                document.getElementById('likes-count').textContent = videoData.likeCount.toLocaleString();
-                document.getElementById('views-count').textContent = videoData.viewCount.toLocaleString();
-                
-                const publishedDate = new Date(videoData.published * 1000);
-                const options = { year: 'numeric', month: 'long', day: 'numeric' };
-                document.getElementById('published-date').textContent = publishedDate.toLocaleDateString('ja-JP', options);
-
-                // コメントの表示
-                const commentsSection = document.getElementById('comments-section');
-                const loadingText = commentsSection.querySelector('p');
-                if (loadingText) {
-                    loadingText.remove();
-                }
-                commentsData.comments.forEach(comment => {
-                    const commentDiv = document.createElement('div');
-                    commentDiv.className = 'comment-item';
-                    commentDiv.innerHTML = `
-                        <div class="comment-author">${comment.author}</div>
-                        <div class="comment-content">${comment.content}</div>
-                    `;
-                    commentsSection.appendChild(commentDiv);
-                });
-            })
-            .catch(error => {
-                console.error('データの取得エラー:', error);
-                document.getElementById('comments-section').innerHTML = '<h3>コメント</h3><p>データの読み込みに失敗しました。</p>';
-            });
-        }
-        
-        // ページ読み込み完了時に動画を表示
-        document.addEventListener('DOMContentLoaded', displayVideoAndComments);
     </script>
+
 </body>
 </html>
-
