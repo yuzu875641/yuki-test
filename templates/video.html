@@ -237,7 +237,9 @@
 
         eduButton.addEventListener('click', function(event) {
             event.preventDefault();
-            const eduParams = '?autoplay=1&amp;mute=0&amp;controls=1&amp;start=0&amp;end=15459&amp;origin=https%3A%2F%2Fcreate.kahoot.it&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;iv_load_policy=3&amp;modestbranding=1&amp;fs=1&amp;embed_config=%7B%22enc%22%3A%22AXH1ezk25YgEJl9W0ldiYefWKfXAYwz8jXwiSV46Jz9p6hV-dID3CMVEI8u6VFDuA3fguvw2bj9QtM-0cL1TNE9OOoVE95aMy6lJlbFJ8A3jiegmwyiCIy77X7-IWF6AggyyHuQxG9M1vO7rwSTlv7KQQKuJ99odQw%3D%3D%22%2C%22hideTitle%22%3Atrue%7D&amp;enablejsapi=1&amp;widgetid=123';
+            // 動画の長さを取得し、秒単位の整数に変換
+            const videoDuration = Math.floor(originalPlayer.duration);
+            const eduParams = `?autoplay=1&mute=0&controls=1&start=0&end=${videoDuration}&origin=https%3A%2F%2Fcreate.kahoot.it&playsinline=1&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&fs=1&enablejsapi=1&widgetid=123`;
             const eduUrl = `https://www.youtubeeducation.com/embed/${videoId}${eduParams}`;
             switchPlayer('iframe', eduUrl);
         });
@@ -303,6 +305,3 @@
             });</script>
 </body>
 </html>
-
-
-
