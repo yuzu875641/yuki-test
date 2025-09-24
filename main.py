@@ -5,241 +5,178 @@ import time
 import datetime
 import random
 import os
+import subprocess
 from cache import cache
 
-max_api_wait_time = 3
-max_time = 15
-apis = [r'https://lekker.gay', r'https://youtube.alt.tyil.nl/']
-url = requests.get(r'https://raw.githubusercontent.com/mochidukiyukimi/yuki-youtube-instance/main/instance.txt').text.rstrip()
+
+max_api_wait_time = 8
+max_time = 12
+apis = ast.literal_eval(requests.get('https://raw.githubusercontent.com/siawaseok3/yuki-by-siawaseok/refs/heads/main/api_list.txt').text)
+url = "https://yukibbs-server.onrender.com/"
 version = "1.0"
 
-apichannels = []
-apicomments = []
-[[apichannels.append(i),apicomments.append(i)] for i in apis]
+os.system("chmod 777 ./yukiverify")
+
+# APIリストのコピーを生成
+apichannels = apis.copy()
+apicomments = apis.copy()
+
+# 例外クラスの定義
 class APItimeoutError(Exception):
     pass
 
+# JSON判定
 def is_json(json_str):
-    result = False
     try:
         json.loads(json_str)
-        result = True
-    except json.JSONDecodeError as jde:
-        pass
-    return result
+        return True
+    except json.JSONDecodeError:
+        return False
 
+# 汎用リクエスト
 def apirequest(url):
     global apis
-    global max_time
     starttime = time.time()
     for api in apis:
-        if  time.time() - starttime >= max_time -1:
+        if time.time() - starttime >= max_time - 1:
             break
         try:
-            res = requests.get(api+url,timeout=max_api_wait_time)
+            res = requests.get(api + url, timeout=max_api_wait_time)
             if res.status_code == 200 and is_json(res.text):
-                print(api+url)
+                print(f"その他成功したAPI: {api}")  # 成功したAPIをログに出力
                 return res.text
             else:
-                print(f"エラー:{api}")
+                print(f"その他エラー: {api}")
                 apis.append(api)
                 apis.remove(api)
         except:
-            print(f"タイムアウト:{api}")
+            print(f"その他タイムアウト: {api}")
             apis.append(api)
             apis.remove(api)
     raise APItimeoutError("APIがタイムアウトしました")
 
+# チャンネル用のリクエスト
 def apichannelrequest(url):
     global apichannels
-    global max_time
     starttime = time.time()
     for api in apichannels:
-        if  time.time() - starttime >= max_time -1:
+        if time.time() - starttime >= max_time - 1:
             break
         try:
-            res = requests.get(api+url,timeout=max_api_wait_time)
+            res = requests.get(api + url, timeout=max_api_wait_time)
             if res.status_code == 200 and is_json(res.text):
+                print(f"チャンネル成功したAPI: {api}")  # 成功したAPIをログに出力
                 return res.text
             else:
-                print(f"エラー:{api}")
+                print(f"チャンネルエラー: {api}")
                 apichannels.append(api)
                 apichannels.remove(api)
         except:
-            print(f"タイムアウト:{api}")
+            print(f"チャンネルタイムアウト: {api}")
             apichannels.append(api)
             apichannels.remove(api)
-    raise APItimeoutError("APIがチャンネルを返しませんでした")
+    raise APItimeoutError("APIがタイムアウトしました")
 
+# コメント用のリクエスト
 def apicommentsrequest(url):
     global apicomments
-    global max_time
     starttime = time.time()
     for api in apicomments:
-        if  time.time() - starttime >= max_time -1:
+        if time.time() - starttime >= max_time - 1:
             break
         try:
-            res = requests.get(api+url,timeout=max_api_wait_time)
+            res = requests.get(api + url, timeout=max_api_wait_time)
             if res.status_code == 200 and is_json(res.text):
+                print(f"コメント成功したAPI: {api}")  # 成功したAPIをログに出力
                 return res.text
             else:
-                print(f"エラー:{api}")
+                print(f"コメントエラー: {api}")
                 apicomments.append(api)
                 apicomments.remove(api)
         except:
-            print(f"タイムアウト:{api}")
+            print(f"コメントタイムアウト: {api}")
             apicomments.append(api)
             apicomments.remove(api)
     raise APItimeoutError("APIがタイムアウトしました")
 
 
-def get_info(request):
-    global version
-    return json.dumps([version,os.environ.get('RENDER_EXTERNAL_URL'),str(request.scope["headers"]),str(request.scope['router'])[39:-2]])
 
+# 動画取得用APIリストの作成
+video_apis = ast.literal_eval(requests.get('https://raw.githubusercontent.com/siawaseok3/yuki-by-siawaseok/refs/heads/main/api_list.txt').text)
+
+# 動画データを取得する関数
 def get_data(videoid):
-    t = json.loads(apirequest(r"api/v1/videos/"+ urllib.parse.quote(videoid)))
-    
-    # 画質リストを生成するロジック
-    quality_list = []
-    
-    # formatStreams（動画と音声が統合されているストリーム）から品質を取得
-    if "formatStreams" in t:
-        for stream in t["formatStreams"]:
-            if stream.get("qualityLabel"):
-                quality_list.append({
-                    "quality": stream.get("qualityLabel"),
-                    "url": stream.get("url")
-                })
-    
-    # adaptiveFormats（動画と音声が別々のストリーム）から動画のみの品質を取得
-    if "adaptiveFormats" in t:
-        for stream in t["adaptiveFormats"]:
-            # MIMEタイプが 'video' で、品質ラベルがあるストリームを追加
-            if stream.get("mimeType", "").startswith("video") and stream.get("qualityLabel"):
-                quality_list.append({
-                    "quality": stream.get("qualityLabel"),
-                    "url": stream.get("url")
-                })
+    global logs
+    t = json.loads(apirequest_video(r"api/v1/videos/" + urllib.parse.quote(videoid)))
+    print("受け取った動画データ全体:")
+    print(json.dumps(t, indent=4))  # JSON形式でインデントをつけて表示
 
-    # 重複を削除し、一意な品質のリストを作成
-    unique_qualities = {item['quality']: item for item in quality_list}.values()
 
-    # 品質を数値でソート
-    def sort_key(item):
-        quality = item['quality'].replace('p', '').replace('+', '')
-        return int(quality) if quality.isdigit() else 0
-
-    sorted_quality_list = sorted(list(unique_qualities), key=sort_key, reverse=True)
-
-    # デフォルトのvideourlsを最も品質の高いストリームに設定
-    videourls = [sorted_quality_list[0]['url']] if sorted_quality_list else []
-    
-    return [
-        [{"id":i["videoId"],"title":i["title"],"authorId":i["authorId"],"author":i["author"]} for i in t["recommendedVideos"]],
-        videourls,
-        t["descriptionHtml"].replace("\n","<br>"),
-        t["title"],
-        t["authorId"],
-        t["author"],
-        t["authorThumbnails"][-1]["url"],
-        sorted_quality_list  # <-- 画質リストを渡す
-    ]
-
-def get_search(q, page, filter_type):
-    errorlog = []
-    
-    # Invidious APIが直接サポートするタイプ
-    api_filter = None
-    if filter_type == 'playlist':
-        api_filter = 'playlist'
-    elif filter_type == 'channel':
-        api_filter = 'channel'
-    # 'live'と'short'はAPIでは直接指定できないので、ここでは指定しない
-    
-    # APIリクエストURLを構築
-    url_suffix = f"api/v1/search?q={urllib.parse.quote(q)}&page={page}&hl=jp"
-    if api_filter:
-        url_suffix += f"&type={api_filter}"
-
-    try:
-        response = apirequest(url_suffix)
-        t = json.loads(response)
-
-        results = []
-        for item in t:
-            try:
-                processed_item = load_search(item)
-                
-                # ここでliveとshortのフィルタリングロジックを追加
-                if filter_type == 'live' and processed_item['type'] == 'video' and 'isLive' in item and item['isLive']:
-                    results.append(processed_item)
-                elif filter_type == 'short' and processed_item['type'] == 'video' and 'isShort' in item and item['isShort']:
-                    results.append(processed_item)
-                elif filter_type not in ['live', 'short']:
-                    # live, short以外のフィルタまたはフィルタなしの場合
-                    results.append(processed_item)
-                
-            except ValueError as ve:
-                errorlog.append(f"Error processing item: {str(ve)}")
-                continue
-        
-        # 'all'の場合は全てのタイプが返されるため、追加のフィルタリングは不要
-        if filter_type == 'all':
-            return results
-        
-        # 'live'、'short'、'playlist'、'channel'の場合は、該当するタイプのみを返す
-        final_results = []
-        for item in results:
-            if filter_type == 'all' or (filter_type == 'live' and item['type'] == 'video' and 'isLive' in item and item['isLive']):
-                final_results.append(item)
-            elif filter_type == 'short' and item['type'] == 'video' and 'isShort' in item and item['isShort']:
-                final_results.append(item)
-            elif filter_type == item.get('type'):
-                final_results.append(item)
-        
-        return final_results
-        
-    except json.JSONDecodeError:
-        raise ValueError("Failed to decode JSON response.")
-    except Exception as e:
-        errorlog.append(f"API request error: {str(e)}")
-        return {"error": "API request error."}
-        
-def load_search(i):
-    if i["type"] == "video":
-        return {
-            "title": i["title"],
+    # 関連動画を解析してリストにする
+    related_videos = [
+        {
             "id": i["videoId"],
+            "title": i["title"],
             "authorId": i["authorId"],
             "author": i["author"],
-            "length": str(datetime.timedelta(seconds=i["lengthSeconds"])),
-            "published": i["publishedText"],
-            "type": "video"
+            "viewCount": i["viewCount"]  # 再生回数を追加（デフォルトは0）
         }
-    elif i["type"] == "playlist":
-        if not i["videos"]:
-            raise ValueError("Playlist is empty.")
-        return {
-            "title": i["title"],
-            "id": i["playlistId"],
-            "thumbnail": i["videos"][0]["videoId"],
-            "count": i["videoCount"],
-            "type": "playlist"
-        }
-    else:  # type = "channel" またはその他
-        thumbnail_url = (
-            i["authorThumbnails"][-1]["url"]
-            if i["authorThumbnails"][-1]["url"].startswith("https")
-            else "https://" + i["authorThumbnails"][-1]["url"]
-        )
-        return {
-            "author": i["author"],
-            "id": i["authorId"],
-            "thumbnail": thumbnail_url,
-            "type": "channel"
-        }
-        
+        for i in t["recommendedVideos"]
+    ]
+     
+
+    # 必要な情報をテンプレートに渡す
+    return render_template(
+        'video.html',
+        video_data=json.dumps(t),  # 動画データをJSON形式で渡す
+        related_videos=related_videos,  # 関連動画リスト
+        stream_urls=list(reversed([i["url"] for i in t["formatStreams"]]))[:2],  # 逆順で2つのストリームURL
+        description_html=t["descriptionHtml"].replace("\n", "<br>"),  # 説明文に改行を追加
+        title=t["title"],  # 動画タイトル
+        author_id=t["authorId"],  # 作者ID
+        author=t["author"],  # 作者名
+        author_thumbnail_url=t["authorThumbnails"][-1]["url"],  # 最後のサムネイルURL
+        view_count=t["viewCount"]  # 動画の再生回数
+    )
+
+# 動画取得用APIリクエスト関数を作成
+def apirequest_video(url):
+    global video_apis
+    starttime = time.time()
+    for api in video_apis:
+        if time.time() - starttime >= max_time - 1:
+            break
+        try:
+            res = requests.get(api + url, timeout=max_api_wait_time)
+            if res.status_code == 200 and is_json(res.text):
+                print(f"動画API成功: {api}")  # 成功したAPIをログに出力
+                return res.text
+            else:
+                print(f"エラー: {api}")
+                video_apis.append(api)
+                video_apis.remove(api)
+        except:
+            print(f"タイムアウト: {api}")
+            video_apis.append(api)
+            video_apis.remove(api)
+    raise APItimeoutError("動画APIがタイムアウトしました")
+
+
+def get_search(q,page):
+    global logs
+    t = json.loads(apirequest(fr"api/v1/search?q={urllib.parse.quote(q)}&page={page}&hl=jp"))
+    def load_search(i):
+        if i["type"] == "video":
+            return {"title":i["title"],"id":i["videoId"],"authorId":i["authorId"],"author":i["author"],"length":str(datetime.timedelta(seconds=i["lengthSeconds"])),"published":i["publishedText"],"type":"video"}
+        elif i["type"] == "playlist":
+            return {"title":i["title"],"id":i["playlistId"],"thumbnail":i["videos"][0]["videoId"],"count":i["videoCount"],"type":"playlist"}
+        else:
+            if i["authorThumbnails"][-1]["url"].startswith("https"):
+                return {"author":i["author"],"id":i["authorId"],"thumbnail":i["authorThumbnails"][-1]["url"],"type":"channel"}
+            else:
+                return {"author":i["author"],"id":i["authorId"],"thumbnail":r"https://"+i["authorThumbnails"][-1]["url"],"type":"channel"}
+    return [load_search(i) for i in t]
+
 def get_channel(channelid):
     global apichannels
     t = json.loads(apichannelrequest(r"api/v1/channels/"+ urllib.parse.quote(channelid)))
@@ -275,13 +212,20 @@ def check_cokie(cookie):
         return True
     return False
 
+def get_verifycode():
+    try:
+        result = subprocess.run(["./yukiverify"], encoding='utf-8', stdout=subprocess.PIPE)
+        hashed_password = result.stdout.strip()
+        return hashed_password
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
+        return None
 
 
 
 
 
-
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends
 from fastapi import Response,Cookie,Request
 from fastapi.responses import HTMLResponse,PlainTextResponse
 from fastapi.responses import RedirectResponse as redirect
@@ -303,7 +247,7 @@ template = Jinja2Templates(directory='templates').TemplateResponse
 
 
 
-#　ホームですね
+
 @app.get("/", response_class=HTMLResponse)
 def home(response: Response,request: Request,yuki: Union[str] = Cookie(None)):
     if check_cokie(yuki):
@@ -311,79 +255,21 @@ def home(response: Response,request: Request,yuki: Union[str] = Cookie(None)):
         return template("home.html",{"request": request})
     print(check_cokie(yuki))
     return redirect("/word")
-#　動画情報の取得
-@app.get('/watch', response_class=HTMLResponse)
-def video(v:str,response: Response,request: Request,yuki: Union[str] = Cookie(None),proxy: Union[str] = Cookie(None)):
+
+
+@app.get("/search", response_class=HTMLResponse,)
+def search(q:str,response: Response,request: Request,page:Union[int,None]=1,yuki: Union[str] = Cookie(None),proxy: Union[str] = Cookie(None)):
     if not(check_cokie(yuki)):
         return redirect("/")
-    response.set_cookie(key="yuki", value="True",max_age=7*24*60*60)
-    videoid = v
-    data = get_data(videoid)
-    if (data == "error"):
-            return template("error.html",{"request": request,"status_code":"502 - Bad Gateway","message": "ビデオ取得時のAPIエラー、再読み込みしてください。","home":False},status_code=502)
-    
-    # get_dataの戻り値（8番目の要素）を個別の変数に代入
-    recommended_videos = data[0]
-    videourls = data[1]
-    description = data[2]
-    videotitle = data[3]
-    authorid = data[4]
-    author = data[5]
-    authoricon = data[6]
-    quality_list = data[7] # <-- 画質リストを取得　難しいね
-
-    
     response.set_cookie("yuki","True",max_age=60 * 60 * 24 * 7)
-    
-    # テンプレートに quality_list を渡す
-    return template('video.html', {
-        "request": request,
-        "videoid": videoid,# <-- videoidを取得します
-        "videourls": videourls,# <-- videostreamを取得して埋め込んでます。360pしかないです
-        "res": recommended_videos,#　<-- 関連動画の情報
-        "description": description,#　<-- 概要欄
-        "videotitle": videotitle,# <-- 見て分かれ
-        "authorid": authorid,# <-- チャンネルのid わかりにくいねそうに決まってる
-        "authoricon": authoricon,# <-- チャンネルのアイコンですURLで埋め込みしてます
-        "author": author,#　<-- チャンネルの名前です。
-        "proxy": proxy,
-        "quality_list": quality_list# <-- テンプレート変数として追加
-    })
+    return template("search.html", {"request": request,"results":get_search(q,page),"word":q,"next":f"/search?q={q}&page={page + 1}","proxy":proxy})
 
-@app.get("/search", response_class=HTMLResponse)
-def search(q: str, response: Response, request: Request, page: Union[int, None] = 1, filter: Union[str, None] = 'all', yuki: Union[str] = Cookie(None), proxy: Union[str] = Cookie(None)):
-    if not check_cokie(yuki):
-        return redirect("/")
-    response.set_cookie("yuki", "True", max_age=60 * 60 * 24 * 7)
-
-    try:
-        # 新しいget_search関数にフィルターを渡す
-        results = get_search(q, page, filter)
-
-        if isinstance(results, dict):
-            error_detail = results.get("error", "Unknown error occurred.")
-            raise HTTPException(status_code=500, detail=f"Search API error: {error_detail}")
-
-        # テンプレートに渡すnextページのURLに、現在のフィルタを追加
-        next_page_url = f"/search?q={q}&page={page + 1}&filter={filter}"
-
-        return template("search.html", {
-            "request": request,
-            "results": results,
-            "word": q,
-            "next": next_page_url,
-            "proxy": proxy,
-            "current_filter": filter  # 現在選択されているフィルタをテンプレートに渡す
-        })
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 @app.get("/hashtag/{tag}")
 def search(tag:str,response: Response,request: Request,page:Union[int,None]=1,yuki: Union[str] = Cookie(None)):
     if not(check_cokie(yuki)):
         return redirect("/")
     return redirect(f"/search?q={tag}")
+
 
 @app.get("/channel/{channelid}", response_class=HTMLResponse)
 def channel(channelid:str,response: Response,request: Request,yuki: Union[str] = Cookie(None),proxy: Union[str] = Cookie(None)):
@@ -449,7 +335,7 @@ def view_bbs(request: Request,t: str,channel:Union[str,None]="main",verify: Unio
 def write_bbs(request: Request,name: str = "",message: str = "",seed:Union[str,None] = "",channel:Union[str,None]="main",verify:Union[str,None]="false",yuki: Union[str] = Cookie(None)):
     if not(check_cokie(yuki)):
         return redirect("/")
-    t = requests.get(fr"{url}bbs/result?name={urllib.parse.quote(name)}&message={urllib.parse.quote(message)}&seed={urllib.parse.quote(seed)}&channel={urllib.parse.quote(channel)}&verify={urllib.parse.quote(verify)}&info={urllib.parse.quote(get_info(request))}",cookies={"yuki":"True"}, allow_redirects=False)
+    t = requests.get(fr"{url}bbs/result?name={urllib.parse.quote(name)}&message={urllib.parse.quote(message)}&seed={urllib.parse.quote(seed)}&channel={urllib.parse.quote(channel)}&verify={urllib.parse.quote(verify)}&info={urllib.parse.quote(get_info(request))}&serververify={get_verifycode()}",cookies={"yuki":"True"}, allow_redirects=False)
     if t.status_code != 307:
         return HTMLResponse(t.text)
     return redirect(f"/bbs?name={urllib.parse.quote(name)}&seed={urllib.parse.quote(seed)}&channel={urllib.parse.quote(channel)}&verify={urllib.parse.quote(verify)}")
@@ -467,11 +353,8 @@ def view_commonds(request: Request,yuki: Union[str] = Cookie(None)):
 @app.get("/load_instance")
 def home():
     global url
-    url = requests.get(r'https://raw.githubusercontent.com/mochidukiyukimi/yuki-youtube-instance/main/instance.txt').text.rstrip()
+    url = "https://yukibbs-server.onrender.com/"
 
-@app.exception_handler(404)
-def notfounderror(request: Request,__):
-    return template("error.html",{"request": request,"status_code":"404 - Not Found","message":"未実装か、存在しないページです。","home":True},status_code=404)
 
 @app.exception_handler(500)
 def page(request: Request,__):
@@ -480,3 +363,47 @@ def page(request: Request,__):
 @app.exception_handler(APItimeoutError)
 def APIwait(request: Request,exception: APItimeoutError):
     return template("APIwait.html",{"request": request},status_code=500)
+
+g_videoid = None
+
+@app.get('/watch', response_class=HTMLResponse)
+def video(
+    v: str, 
+    response: Response, 
+    request: Request, 
+    yuki: Union[str] = Cookie(None), 
+    proxy: Union[str] = Cookie(None)
+):
+    global g_videoid  # グローバル変数を使用するために宣言
+
+    # クッキーの確認
+    if not check_cokie(yuki):
+        return redirect("/")
+    
+    # クッキーをセット
+    response.set_cookie(key="yuki", value="True", max_age=7*24*60*60)
+
+    # 動画IDを取得し、videoidとg_videoidに代入
+    videoid = v
+    g_videoid = videoid  # グローバル変数に代入
+
+    # データを取得
+    t = get_data(videoid)
+
+    # 再度クッキーをセット
+    response.set_cookie(key="yuki", value="True", max_age=60 * 60 * 24 * 7)
+
+    # テンプレートに g_videoid を渡す
+    return template('video.html', {
+        "request": request,
+        "videoid": videoid,
+        "g_videoid": g_videoid,  # ここで g_videoid をテンプレートに渡す
+        "videourls": t[1],
+        "res": t[0],
+        "description": t[2],
+        "videotitle": t[3],
+        "authorid": t[4],
+        "authoricon": t[6],
+        "author": t[5],
+        "proxy": proxy
+    })
