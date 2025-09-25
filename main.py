@@ -412,34 +412,42 @@ def video(
 def umekomi_proxy(url: str):
     """
     指定されたURLのコンテンツをプロキシし、動画埋め込みのフィルターブロックを回避するためのエンドポイント。
-    使用例: https://〇〇.〇〇/umekomi?url=https://woke-proxy.poketube.fun/companion/latest_version?id={youtube video id}&itag=18&local=true
+    User-Agentを追加して、リダイレクト先のサーバーからの拒否を防ぎます。
     """
+    if not url:
+        print("Proxy Error: URL parameter is empty.")
+        return Response(content="Error: 'url' parameter is required.", status_code=400, media_type="text/plain")
+    
+    # サーバーからの拒否を防ぐために一般的なUser-Agentを追加
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+
     try:
-        # ストリームとしてリクエストを実行し、大きな動画ファイルを効率的に処理する
-        # ここでは最大30秒のタイムアウトを設定
-        res = requests.get(url, stream=True, timeout=30)
-        res.raise_for_status() # ステータスコードが4xxまたは5xxの場合は例外を発生させる
-        
+        # stream=True、timeout=30、headersを追加してリクエスト
+        res = requests.get(url, stream=True, timeout=30, headers=headers)
+        res.raise_for_status() 
+
         # Content-Typeを取得
         content_type = res.headers.get("Content-Type", "application/octet-stream")
         
         # 動画ストリーミングに必要なヘッダーを保持
-        headers = {}
+        final_headers = {}
         for header in ['Content-Type', 'Content-Length', 'Accept-Ranges']:
             if header in res.headers:
-                headers[header] = res.headers[header]
+                final_headers[header] = res.headers[header]
         
-        # StreamingResponseを使用して、コンテンツをチャンク単位でストリーム配信
         return StreamingResponse(
             content=res.iter_content(chunk_size=8192), 
             status_code=res.status_code, 
-            headers=headers,
+            headers=final_headers,
             media_type=content_type
         )
 
     except requests.exceptions.RequestException as e:
-        print(f"Proxy request failed: {e}")
-        # プロキシリクエストに失敗した場合は、502 Bad Gatewayを返す
+        # より詳細なエラーログを出力
+        print(f"Proxy request failed to {url}. Status: {getattr(e.response, 'status_code', 'N/A')}. Error type: {type(e).__name__}. Details: {e}")
+        # 502 Bad Gateway を返す
         return Response(
             content=f"Proxy Error: Failed to retrieve content from {url}", 
             status_code=502, 
