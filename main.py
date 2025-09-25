@@ -408,48 +408,66 @@ def video(
         "author": t[5],
         "proxy": proxy
     })
-@app.get("/umekomi")
-def umekomi_proxy(url: str):
+    @app.get("/umekomi")
+def umekomi_proxy(url: str, request: Request):
     """
-    指定されたURLのコンテンツをプロキシし、動画埋め込みのフィルターブロックを回避するためのエンドポイント。
-    User-Agentを追加して、リダイレクト先のサーバーからの拒否を防ぎます。
+    HTTP Rangeリクエストに透過的に対応し、シーク可能な動画ストリーミングを可能にするプロキシ。
     """
     if not url:
         print("Proxy Error: URL parameter is empty.")
         return Response(content="Error: 'url' parameter is required.", status_code=400, media_type="text/plain")
-    
-    # サーバーからの拒否を防ぐために一般的なUser-Agentを追加
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+
+    # 1. クライアントから受け取ったヘッダーを抽出
+    # Host, Accept-Encoding, Content-LengthなどはRequestsに任せ、または除外します。
+    # Rangeヘッダーはプロキシ先のサーバーに転送するため、そのまま残します。
+    proxied_headers = {
+        k: v for k, v in request.headers.items() 
+        if k.lower() not in ('host', 'accept-encoding', 'content-length', 'cookie')
     }
+    
+    # User-Agentを上書きして、一般的なブラウザからのリクエストに見せかける
+    proxied_headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
 
     try:
-        # stream=True、timeout=30、headersを追加してリクエスト
-        res = requests.get(url, stream=True, timeout=30, headers=headers)
-        res.raise_for_status() 
+        # 2. プロキシ先へのリクエスト実行
+        res = requests.get(url, stream=True, timeout=30, headers=proxied_headers)
+        res.raise_for_status() # 4xx/5xxエラーの場合はrequests.exceptions.HTTPErrorを発生させる
 
-        # Content-Typeを取得
-        content_type = res.headers.get("Content-Type", "application/octet-stream")
-        
-        # 動画ストリーミングに必要なヘッダーを保持
+        # 3. クライアントに戻すヘッダーを構築
         final_headers = {}
-        for header in ['Content-Type', 'Content-Length', 'Accept-Ranges']:
-            if header in res.headers:
-                final_headers[header] = res.headers[header]
+        # 動画ストリーミングで重要なヘッダー（特にRange関連）をすべて転送
+        for k, v in res.headers.items():
+            # Connectionヘッダーは自動的にrequestsが処理するため除外
+            if k.lower() not in ('transfer-encoding', 'connection'):
+                final_headers[k] = v
+
+        # Rangeリクエストが成功した場合、ステータスコードは 206 Partial Content です。
+        # フルリクエストの場合は 200 OK です。これらをプロキシ先から受け取ったものをそのまま使用します。
+        status_code = res.status_code
         
+        # 4. 最終的なStreamingResponseを返す
         return StreamingResponse(
             content=res.iter_content(chunk_size=8192), 
-            status_code=res.status_code, 
+            status_code=status_code, 
             headers=final_headers,
-            media_type=content_type
+            media_type=final_headers.get('Content-Type', 'application/octet-stream')
         )
 
-    except requests.exceptions.RequestException as e:
-        # より詳細なエラーログを出力
-        print(f"Proxy request failed to {url}. Status: {getattr(e.response, 'status_code', 'N/A')}. Error type: {type(e).__name__}. Details: {e}")
-        # 502 Bad Gateway を返す
+    except requests.exceptions.HTTPError as e:
+        # プロキシ先がHTTPエラーを返した場合 (403 Forbidden, 404 Not Found など)
+        status_code = e.response.status_code
+        print(f"Proxy target returned HTTP Error: {status_code} for {url}. Details: {e}")
         return Response(
-            content=f"Proxy Error: Failed to retrieve content from {url}", 
+            content=f"Proxy Target Error: Status {status_code}", 
+            status_code=status_code, 
+            media_type="text/plain"
+        )
+        
+    except requests.exceptions.RequestException as e:
+        # 接続、タイムアウトなど、その他のリクエストエラー
+        print(f"Proxy connection failed (Network/Timeout) to {url}. Error type: {type(e).__name__}. Details: {e}")
+        return Response(
+            content=f"Proxy Error: Connection/Timeout Failed for {url}", 
             status_code=502, 
             media_type="text/plain"
         )
