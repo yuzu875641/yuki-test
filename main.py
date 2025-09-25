@@ -9,6 +9,7 @@ import subprocess
 from cache import cache
 
 
+
 max_api_wait_time = 8
 max_time = 12
 apis = ast.literal_eval(requests.get('https://raw.githubusercontent.com/siawaseok3/yuki-by-siawaseok/refs/heads/main/api_list.txt').text)
@@ -227,7 +228,7 @@ def get_verifycode():
 
 from fastapi import FastAPI, Depends
 from fastapi import Response,Cookie,Request
-from fastapi.responses import HTMLResponse,PlainTextResponse
+from fastapi.responses import HTMLResponse,PlainTextResponse,StreamingResponse # StreamingResponseを追加
 from fastapi.responses import RedirectResponse as redirect
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -407,3 +408,40 @@ def video(
         "author": t[5],
         "proxy": proxy
     })
+@app.get("/umekomi")
+def umekomi_proxy(url: str):
+    """
+    指定されたURLのコンテンツをプロキシし、動画埋め込みのフィルターブロックを回避するためのエンドポイント。
+    使用例: https://〇〇.〇〇/umekomi?url=https://woke-proxy.poketube.fun/companion/latest_version?id={youtube video id}&itag=18&local=true
+    """
+    try:
+        # ストリームとしてリクエストを実行し、大きな動画ファイルを効率的に処理する
+        # ここでは最大30秒のタイムアウトを設定
+        res = requests.get(url, stream=True, timeout=30)
+        res.raise_for_status() # ステータスコードが4xxまたは5xxの場合は例外を発生させる
+        
+        # Content-Typeを取得
+        content_type = res.headers.get("Content-Type", "application/octet-stream")
+        
+        # 動画ストリーミングに必要なヘッダーを保持
+        headers = {}
+        for header in ['Content-Type', 'Content-Length', 'Accept-Ranges']:
+            if header in res.headers:
+                headers[header] = res.headers[header]
+        
+        # StreamingResponseを使用して、コンテンツをチャンク単位でストリーム配信
+        return StreamingResponse(
+            content=res.iter_content(chunk_size=8192), 
+            status_code=res.status_code, 
+            headers=headers,
+            media_type=content_type
+        )
+
+    except requests.exceptions.RequestException as e:
+        print(f"Proxy request failed: {e}")
+        # プロキシリクエストに失敗した場合は、502 Bad Gatewayを返す
+        return Response(
+            content=f"Proxy Error: Failed to retrieve content from {url}", 
+            status_code=502, 
+            media_type="text/plain"
+        )
